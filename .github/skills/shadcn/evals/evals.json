@@ -1,0 +1,47 @@
+{
+  "skill_name": "shadcn",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Estou construindo um app Next.js com shadcn/ui (preset base-nova, ícones lucide). Crie um componente de formulário de configurações com campos para: nome completo, endereço de email e preferências de notificação (email, SMS, notificações push como opções de alternância). Adicione estados de validação para campos obrigatórios.",
+      "expected_output": "Um componente React usando FieldGroup, Field, ToggleGroup, validação data-invalid/aria-invalid, espaçamento gap-* e cores semânticas.",
+      "files": [],
+      "expectations": [
+        "Usa componentes FieldGroup e Field para o layout do formulário em vez de div bruta com space-y",
+        "Usa Switch para alternâncias independentes de notificação liga/desliga, sem iterar Button com estado ativo manual",
+        "Usa data-invalid em Field e aria-invalid no controle de input para estados de validação",
+        "Usa gap-* (por exemplo, gap-4, gap-6) em vez de space-y-* ou space-x-* para espaçamento",
+        "Usa tokens de cor semânticos (por exemplo, bg-background, text-muted-foreground, text-destructive) em vez de cores brutas como bg-red-500",
+        "Sem overrides manuais de cor dark:"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Crie um componente de dialog para editar um perfil de usuário. Ele deve ter o avatar do usuário no topo, campos de input para nome e bio, e botões Salvar/Cancelar com ícones apropriados. Use shadcn/ui com preset radix-nova e ícones tabler.",
+      "expected_output": "Um componente React com DialogTitle, Avatar+AvatarFallback, data-icon em ícones de botões, sem classes de tamanho em ícones e imports de ícones tabler.",
+      "files": [],
+      "expectations": [
+        "Inclui DialogTitle para acessibilidade, visível ou com classe sr-only",
+        "O componente Avatar inclui AvatarFallback",
+        "Ícones em botões usam o atributo data-icon (data-icon=\"inline-start\" ou data-icon=\"inline-end\")",
+        "Sem classes de tamanho em ícones dentro de componentes (sem size-4, w-4, h-4 etc.)",
+        "Usa ícones tabler (@tabler/icons-react) em vez de lucide-react",
+        "Usa asChild para triggers customizados (preset radix)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Crie um componente de dashboard que mostre 4 cards de estatísticas em uma grade. Cada card tem um título, número grande, badge de alteração percentual e um estado de skeleton de carregamento. Use shadcn/ui com preset base-nova e ícones lucide.",
+      "expected_output": "Um componente React com composição completa de Card, Skeleton para carregamento, Badge para alterações, cores semânticas e espaçamento gap-*.",
+      "files": [],
+      "expectations": [
+        "Usa composição completa de Card com CardHeader, CardTitle e CardContent, sem despejar tudo em CardContent",
+        "Usa componente Skeleton para placeholders de carregamento em vez de divs customizadas com animate-pulse",
+        "Usa componente Badge para alteração percentual em vez de spans customizados estilizados",
+        "Usa tokens de cor semânticos em vez de valores de cor brutos como bg-green-500 ou text-red-600",
+        "Usa gap-* em vez de space-y-* ou space-x-* para espaçamento",
+        "Usa size-* quando largura e altura forem iguais em vez de w-* e h-* separados"
+      ]
+    }
+  ]
+}
