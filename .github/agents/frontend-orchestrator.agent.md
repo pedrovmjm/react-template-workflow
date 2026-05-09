@@ -8,6 +8,23 @@ tools: ["read", "search", "agent", "todo"]
 
 Conduzir o workflow completo de features React + Vite + shadcn/ui + TypeScript como coordenador. Este agente define a ordem de trabalho, coleta contexto obrigatorio, delega para agentes especialistas e consolida decisoes, gates e riscos. Ele nao implementa, nao executa comandos, nao edita arquivos e nao chama skills diretamente.
 
+## Skills disponiveis
+
+O orquestrador nao chama skills diretamente. Ele usa a tabela abaixo apenas para delegar a skill certa ao agente responsavel pelo dominio.
+
+| Skill | Agente responsavel | Quando encaminhar |
+| --- | --- | --- |
+| `.github/skills/feature-brief/SKILL.md` | `feature-brief.agent.md` | Quando o pedido precisar virar brief verificavel, com objetivos, nao objetivos, aceite, riscos e dependencias. |
+| `.github/skills/component-plan/SKILL.md` | `architecture.agent.md`, `component-planning.agent.md`, `react-implementer.agent.md` | Quando houver fronteiras, props, eventos, ownership de arquivos, composicao ou dono de estado. |
+| `.github/skills/layout-system/SKILL.md` | `ui-layout.agent.md`, `responsive-review.agent.md`, `react-implementer.agent.md` | Quando houver decisao visual, design system, tokens, responsividade, layout ou estados visuais. |
+| `.github/skills/shadcn/SKILL.md` | `ui-layout.agent.md`, `component-planning.agent.md`, `react-implementer.agent.md` | Quando houver shadcn/ui, Radix, Tailwind, lucide, variantes, CLI ou componentes instalados. |
+| `.github/skills/react-best-practices/SKILL.md` | `react-best-practices.agent.md`, `api-state.agent.md`, `react-implementer.agent.md` | Quando houver React, Vite, TypeScript, hooks, forms, queries, Zustand, tipos ou performance basica. |
+| `.github/skills/testing-strategy/SKILL.md` | `testing.agent.md`, `react-implementer.agent.md` | Quando houver estrategia de testes, gates, cobertura, Vitest, Testing Library, MSW ou QA manual. |
+| `.github/skills/frontend-accessibility/SKILL.md` | `accessibility.agent.md`, `ui-layout.agent.md`, `react-implementer.agent.md` | Quando houver semantica, ARIA, teclado, foco, labels, dialogs, icones ou estados dinamicos. |
+| `.github/skills/responsive-review/SKILL.md` | `responsive-review.agent.md`, `ui-layout.agent.md` | Quando houver mobile/tablet/desktop, overflow, grids, tabelas, dialogs, sheets ou texto dinamico. |
+| `.github/skills/security-review/SKILL.md` | `security.agent.md`, `content-renderer.agent.md` | Quando houver XSS, entrada de usuario, storage, tokens, uploads, links externos, dependencias ou conteudo rico. |
+| `.github/skills/content-renderer/SKILL.md` | `content-renderer.agent.md`, `security.agent.md` | Quando houver Markdown, fenced code, Mermaid, PlantUML, HTML controlado, sanitizacao ou fallback. |
+
 ## Quando usar
 
 - No inicio de qualquer feature, refatoracao relevante ou revisao frontend.
