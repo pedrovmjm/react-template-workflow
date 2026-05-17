@@ -1,6 +1,6 @@
 ---
 name: component-plan
-description: Planeja arquitetura frontend, componentes React, contratos de props, estado, fluxo de dados, hooks, services e arvore de arquivos antes da implementacao. Use depois do brief e antes de alterar componentes.
+description: Planeja arquitetura frontend, rotas/URL, componentes React, contratos de props, estado, fluxo de dados, hooks, services e arvore de arquivos antes da implementacao. Use depois do brief e antes de alterar componentes.
 ---
 
 # Skill: component-plan
@@ -11,13 +11,14 @@ component-plan
 
 ## Proposito
 
-Planejar arquitetura, componentes, contratos de props, estado, fluxo de dados e estrutura de arquivos antes da implementacao.
+Planejar arquitetura, rotas/URL, componentes, contratos de props, estado, fluxo de dados e estrutura de arquivos antes da implementacao.
 
 ## Quando usar
 
 - Depois do brief.
 - Antes de criar ou alterar componentes.
 - Quando houver duvida sobre `pages`, `features`, `components`, `services`, `hooks`, `store`, `schemas`, `types` ou `utils`.
+- Quando a feature criar pagina, mudar endereco, usar path params, query string, filtros compartilhaveis ou navegacao.
 
 ## Entradas
 
@@ -29,6 +30,7 @@ Planejar arquitetura, componentes, contratos de props, estado, fluxo de dados e 
 ## Saidas
 
 - Plano de componentes e arquitetura.
+- Plano de rotas, URL, path params, query string e navegacao.
 - Arvore de arquivos proposta.
 - Contratos de props, estado e dados.
 
@@ -41,17 +43,19 @@ Planejar arquitetura, componentes, contratos de props, estado, fluxo de dados e 
 ## Procedimento
 
 1. Identifique rotas e paginas afetadas.
-2. Defina se a logica pertence a feature, pagina, service, hook ou store.
-3. Separe componentes de pagina, feature e compartilhados.
-4. Defina props e eventos.
-5. Defina dono do estado.
-6. Defina hooks e services necessarios.
-7. Planeje a arvore de arquivos.
-8. Registre decisoes abertas.
+2. Defina path, path params, query string e comportamento de navegacao.
+3. Defina se a logica pertence a feature, pagina, service, hook ou store.
+4. Separe componentes de pagina, feature e compartilhados.
+5. Defina props e eventos.
+6. Defina dono do estado.
+7. Defina hooks e services necessarios.
+8. Planeje a arvore de arquivos.
+9. Registre decisoes abertas.
 
 ## Checklist
 
 - [ ] Organizacao feature-first foi aplicada.
+- [ ] Rotas/URL foram planejadas quando houver pagina navegavel.
 - [ ] Componentes de pagina apenas orquestram.
 - [ ] Componentes de feature contem UI de dominio.
 - [ ] Componentes compartilhados so existem com reuso real.
@@ -83,5 +87,7 @@ use-example-feature/
 
 - Criar `components/shared` como destino padrao.
 - Colocar logica de dominio em `pages`.
+- Criar pagina sem rota/URL clara.
+- Persistir em store aquilo que deve estar em path/query para refresh, compartilhamento ou historico.
 - Criar store global para estado local.
 - Usar `any` em contratos de props.

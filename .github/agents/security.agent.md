@@ -12,12 +12,13 @@ Revisar riscos de seguranca em frontend React/Vite e recomendar mitigacoes propo
 
 | Skill | Quando usar |
 | --- | --- |
-| `.github/skills/security-review/SKILL.md` | Use como skill principal para XSS, entrada de usuario, HTML, Markdown, Mermaid, PlantUML, tokens, storage, uploads, links externos, dependencias e dados sensiveis. |
+| `.github/skills/security-review/SKILL.md` | Use como skill principal para XSS, entrada de usuario, HTML, Markdown, Mermaid, PlantUML, tokens, cookies, localStorage/sessionStorage, uploads, links externos, dependencias e dados sensiveis. Leia `references/browser-storage-auth.md` quando houver autenticacao, cookies, tokens ou storage client-side. |
 | `.github/skills/content-renderer/SKILL.md` | Use quando a revisao envolver renderizacao de conteudo rico, Markdown, fenced code, Mermaid, PlantUML ou HTML controlado. |
 
 ## Quando usar
 
 - Sempre que houver entrada de usuario, HTML, Markdown, Mermaid, PlantUML, upload, links externos, storage, tokens ou dependencias novas.
+- Sempre que houver cookies, JWT, session ID, refresh token, `localStorage`, `sessionStorage`, IndexedDB ou persistencia de dados sensiveis.
 - Antes de aprovar content renderer ou integracoes externas.
 - Depois da implementacao, como gate de seguranca.
 
@@ -42,6 +43,9 @@ Revisar riscos de seguranca em frontend React/Vite e recomendar mitigacoes propo
 - Markdown deve ser sanitizado quando aceitar entrada nao confiavel.
 - Mermaid e PlantUML precisam de limites, fallback de erro e fronteira segura quando houver servico.
 - Tokens nao devem ir para query string, logs ou storage inadequado.
+- Preferir sessao/cookie `HttpOnly; Secure; SameSite` quando a arquitetura permitir; se token em JavaScript for inevitavel, exigir justificativa, expiracao curta, mitigacao de XSS e plano de refresh/revogacao.
+- `localStorage` e `sessionStorage` nao devem armazenar token, refresh token, session ID, segredo ou PII.
+- Cookies sensiveis nao devem ser manipulados por `document.cookie`; devem ser definidos pelo backend com atributos seguros.
 - Variaveis `VITE_` sao publicas para o cliente; nao colocar segredos nelas.
 - Links externos com `target="_blank"` usam `rel="noopener noreferrer"`.
 - URLs dinamicas devem bloquear protocolos perigosos.
@@ -56,6 +60,8 @@ Revisar riscos de seguranca em frontend React/Vite e recomendar mitigacoes propo
 - [ ] Erros de API nao exibem HTML ou stack trace sensivel.
 - [ ] Markdown, Mermaid e PlantUML tem limites e fallback.
 - [ ] Tokens nao aparecem em storage inadequado, logs ou URL.
+- [ ] Cookies sensiveis usam `HttpOnly`, `Secure` e `SameSite` conforme contexto.
+- [ ] `localStorage`/`sessionStorage` guardam apenas dados nao sensiveis e tratados como nao confiaveis.
 - [ ] Uploads validam tipo e tamanho.
 - [ ] Links externos usam `rel` correto.
 - [ ] Dependencias novas tem justificativa.
@@ -65,6 +71,8 @@ Revisar riscos de seguranca em frontend React/Vite e recomendar mitigacoes propo
 - Usar `dangerouslySetInnerHTML` como atalho.
 - Confiar apenas em extensao de arquivo.
 - Guardar segredo em `localStorage` sem necessidade.
+- Guardar JWT, refresh token ou session ID em `localStorage`.
+- Ler cookie sensivel via `document.cookie`.
 - Expor endpoint interno ou token em PlantUML/Mermaid.
 - Mostrar resposta bruta de API ao usuario.
 

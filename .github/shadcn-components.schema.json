@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "React Template Workflow shadcn components manifest",
+  "type": "object",
+  "required": ["source", "cli", "starterRequired", "allComponents"],
+  "properties": {
+    "source": {
+      "type": "string"
+    },
+    "cli": {
+      "type": "object",
+      "required": ["init", "addAll", "addStarterRequired"],
+      "properties": {
+        "init": { "type": "string" },
+        "addAll": { "type": "string" },
+        "addStarterRequired": { "type": "string" }
+      }
+    },
+    "starterRequired": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "allComponents": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    }
+  }
+}

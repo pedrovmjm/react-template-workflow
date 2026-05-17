@@ -8,7 +8,15 @@
 
 ## Diagram rendering security
 
-## Token handling
+## Cookies, tokens e storage
+
+- Credenciais:
+- Local de armazenamento:
+- Cookies e atributos:
+- localStorage/sessionStorage:
+- CSRF:
+- Logout/revogacao:
+- Riscos residuais:
 
 ## Upload validation
 
@@ -19,4 +27,3 @@
 ## Mitigacoes recomendadas
 
 ## Registros de decisao
-

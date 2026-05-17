@@ -2,6 +2,14 @@
 
 ## Arquitetura
 
+## Rotas e URL
+
+- Path:
+- Path params:
+- Query string:
+- Navegacao:
+- Estado que deve sobreviver a refresh/link:
+
 ## Componentes de rota/pagina
 
 ## Componentes de feature
@@ -23,4 +31,3 @@
 ## Decisoes abertas
 
 ## Registros de decisao
-
