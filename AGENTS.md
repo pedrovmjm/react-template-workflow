@@ -4,11 +4,13 @@ Este repositorio usa um workflow de agentes para frontend React + Vite + TypeScr
 
 ## Regra principal de roteamento
 
-Sempre que o pedido envolver implementacao, alteracao de codigo, refatoracao, correcao, criacao de tela, criacao de componente, ajuste visual, teste, revisao tecnica ou qualquer trabalho que possa modificar arquivos, envie o trabalho para o agente de workflow:
+Envie o trabalho para o orquestrador quando o pedido envolver implementacao, alteracao de codigo, refatoracao, correcao, criacao de tela, criacao de componente, ajuste visual, teste, revisao tecnica, **briefing**, **planejamento sem edicao** ou qualquer trabalho que passe pelo workflow de agentes:
 
 - `.github/agents/frontend-orchestrator.agent.md`
 
-Nao execute skills diretamente a partir destas instrucoes globais. O orquestrador e responsavel por decidir quais agentes especialistas e quais skills devem ser considerados em cada etapa.
+Briefing e planejamento sem edicao de arquivos tambem passam pelo orquestrador, mas **nao** exigem o workflow completo: o orquestrador deve usar o modo de escopo adequado (por exemplo **Brief-only** para "quero um briefing de uma tela") e acionar somente os especialistas necessarios.
+
+Nao execute skills diretamente a partir destas instrucoes globais. O orquestrador e responsavel por decidir o modo de escopo, quais agentes especialistas acionar e quais skills cada um deve considerar.
 
 ## Design system obrigatorio
 

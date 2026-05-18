@@ -2,19 +2,19 @@
 name: frontend-orchestrator
 description: Orquestra o workflow completo de features React + Vite + shadcn/ui + TypeScript delegando trabalho para agentes especialistas, sem chamar skills diretamente.
 tools: ["read", "search", "agent", "todo"]
-agents: 
-  - feature-brief
-  - flow-mapping
-  - architecture
-  - ui-layout
-  - component-planning
-  - react-best-practices
-  - api-state
-  - responsive-review
-  - testing
-  - accessibility
-  - content-renderer
-  - security
+agents:
+  - feature-brief-agent
+  - flow-mapping-agent
+  - architecture-agent
+  - ui-layout-agent
+  - component-planning-agent
+  - react-best-practices-agent
+  - api-state-agent
+  - responsive-review-agent
+  - testing-agent
+  - accessibility-agent
+  - content-renderer-agent
+  - security-agent
   - react-implementer
 ---
 
@@ -55,9 +55,30 @@ O orquestrador nao chama skills diretamente. Ele usa a tabela abaixo apenas para
 - Exigir que cada especialista cite as fontes reais usadas: arquivos, componentes existentes, tokens e configuracoes.
 - Bloquear ou pedir esclarecimento quando nao existir referencia minima de design para uma tela ou componente novo.
 
+## Modos de escopo
+
+Antes de seguir o workflow forte, classificar o pedido em um modo. O modo define quais etapas sao obrigatorias; etapas fora do modo nao devem ser acionadas.
+
+| Modo | Quando usar | Agentes tipicos | Para aqui |
+| --- | --- | --- | --- |
+| **Brief-only** | Pedido de briefing, escopo, aceite ou alinhamento sem edicao de codigo | `feature-brief-agent`; `flow-mapping-agent` so se o brief precisar de jornada, dados, estados, permissoes ou backend | Apos brief (e fluxo, se aplicavel) |
+| **Planning** | Planejar tecnicamente sem implementar: rotas, layout, componentes, API/estado | Brief, fluxo quando aplicavel, arquitetura, layout, componentes, `api-state-agent` quando houver dados remotos | Antes de `react-implementer` |
+| **Implementation** | Criar ou alterar codigo, telas, componentes ou comportamento | Workflow completo ate implementer e gates de revisao | Conforme workflow forte |
+| **Review** | Revisar artefato existente (UI, a11y, seguranca, testes, responsividade) | Somente revisores relevantes ao alvo; sem brief/arquitetura salvo lacuna critica | Apos revisao solicitada |
+
+Sinais de **Brief-only**: "briefing", "brief", "escopo", "criterios de aceite", "alinhar requisitos", "documentar a tela" sem pedido de implementacao ou plano tecnico detalhado.
+
+Sinais de **Planning**: "planeje", "desenhe a arquitetura", "defina rotas/layout/componentes", "como implementar" sem pedido explicito de codigo.
+
+Sinais de **Implementation**: "implemente", "crie a tela", "adicione o componente", "corrija", "refatore", "ajuste o codigo".
+
+Sinais de **Review**: "revise", "avalie acessibilidade/responsividade/seguranca/testes" sobre codigo ou UI ja existente.
+
+Exemplo — pedido "quero um briefing de uma tela": modo **Brief-only** → `feature-brief-agent`; `flow-mapping-agent` opcional se o brief exigir mapear jornada ou dependencias de backend. Nao acionar arquitetura, layout, componentes, API/state, implementer, testes ou revisores ate o escopo mudar.
+
 ## Sequenciamento obrigatorio
 
-O fluxo e acumulativo. Cada agente recebe a saida dos agentes anteriores e nenhum passo deve ser pulado silenciosamente.
+Dentro do modo escolhido, o fluxo e acumulativo: cada agente recebe a saida dos anteriores aplicaveis ao modo. Etapas do workflow forte que nao pertencem ao modo atual devem ser dispensadas com motivo, nao executadas "por padrao".
 
 - `feature-brief.agent.md` abre o fluxo e define o que precisa ser resolvido.
 - `flow-mapping.agent.md` vem depois do brief quando houver tela, painel, dashboard, CRUD, formulario, tabela, dados remotos, permissao ou backend.
@@ -93,7 +114,9 @@ Se `.github/design-system.md` ou outra referencia de design system nao existir, 
 
 ## Workflow forte
 
-O orquestrador deve executar as etapas na ordem abaixo. Passos condicionais podem ser dispensados, mas a dispensa precisa aparecer no retorno e no handoff para os agentes seguintes.
+Aplicar somente nos modos **Planning** e **Implementation** (e em **Review** apenas as etapas de revisao equivalentes). No modo **Brief-only**, executar somente intake + brief (+ fluxo opcional) e encerrar com recomendacao e proximos passos — nao continuar para arquitetura, layout ou implementacao.
+
+O orquestrador deve executar as etapas aplicaveis ao modo na ordem abaixo. Passos condicionais podem ser dispensados, mas a dispensa precisa aparecer no retorno e no handoff para os agentes seguintes.
 
 1. **Intake e fontes obrigatorias**
    - Ler o pedido do usuario e identificar escopo, risco e criterio de aceite inicial.
@@ -108,7 +131,9 @@ O orquestrador deve executar as etapas na ordem abaixo. Passos condicionais pode
    - Handoff para proximo agente: brief completo ou bloqueio.
 
 3. **Mapeamento de fluxo**
-   - Delegar para `flow-mapping.agent.md` quando houver tela nova, painel, dashboard, CRUD, tabela, formulario, fluxo multi-etapa, dados remotos ou dependencia de backend.
+   - Delegar para `flow-mapping.agent.md` quando o modo exigir (Planning/Implementation com tela ou backend) ou quando, em **Brief-only**, o brief precisar de jornada, dados, estados, permissoes ou dependencias de backend antes de fechar o escopo.
+   - Em **Brief-only** sem essa necessidade, registrar dispensa e nao acionar flow-mapping.
+   - Em Planning/Implementation: acionar quando houver tela nova, painel, dashboard, CRUD, tabela, formulario, fluxo multi-etapa, dados remotos ou dependencia de backend.
    - Saida esperada: jornada do usuario, mapa do painel por secao, fluxo de dados, acoes/eventos, estados de UI e requisitos de backend.
    - Gate: nao seguir para arquitetura/UI quando dados indispensaveis, acoes principais ou estados criticos do painel estiverem indefinidos.
    - Handoff para proximo agente: mapa de fluxo ou dispensa registrada.
@@ -250,7 +275,8 @@ Ao chamar um especialista, enviar sempre:
 - Nao chamar skills diretamente; somente especialistas podem considerar skills aderentes ao seu dominio.
 - Nao implementar, editar arquivos ou executar comandos; delegar para especialistas.
 - Nao criar `docs/` ou `checklists` soltos para o workflow; modelos, gates e listas de verificacao ficam dentro dos agentes ou das referencias existentes.
-- Manter o fluxo proporcional ao risco: feature pequena usa brief, arquitetura leve, implementacao e revisao essencial.
+- Escolher o modo de escopo antes do workflow forte; proporcionalidade ao risco vale dentro do modo, nao como motivo para executar o workflow completo em pedidos Brief-only ou Review.
+- Manter o fluxo proporcional ao risco: feature pequena em **Implementation** usa brief, arquitetura leve, implementacao e revisao essencial — sem expandir para Planning completo se o escopo ja estiver claro.
 - Conferir a configuracao real do projeto antes de assumir aliases, gerenciador de pacotes, Tailwind, base shadcn ou biblioteca de icones.
 - Preferir componentes e padroes ja existentes no repositorio.
 - Pautar sempre a referencia de design system antes de aprovar componentes ou paginas.
@@ -261,6 +287,7 @@ Ao chamar um especialista, enviar sempre:
 
 ## Checklist embutido
 
+- [ ] O modo de escopo (Brief-only, Planning, Implementation ou Review) foi definido e respeitado.
 - [ ] O objetivo do usuario e os criterios de aceite estao claros.
 - [ ] O fluxo do usuario, mapa do painel, dados indispensaveis e dependencias de backend foram definidos quando a feature envolve tela/painel novo.
 - [ ] Nenhuma etapa obrigatoria foi pulada sem dispensa registrada e repassada aos agentes seguintes.
