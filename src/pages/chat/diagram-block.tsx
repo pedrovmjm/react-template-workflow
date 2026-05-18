@@ -1,5 +1,5 @@
 import { type PointerEvent, useEffect, useId, useRef, useState } from "react"
-import mermaid from "mermaid"
+type MermaidApi = typeof import("mermaid").default
 import {
   CheckIcon,
   CopyIcon,
@@ -63,7 +63,15 @@ function createDiagramThemeCss() {
   ].join("")
 }
 
-function initializeMermaid() {
+let mermaidLoader: Promise<MermaidApi> | null = null
+
+function loadMermaid() {
+  mermaidLoader ??= import("mermaid").then((module) => module.default)
+  return mermaidLoader
+}
+
+async function initializeMermaid() {
+  const mermaid = await loadMermaid()
   const colors = getDiagramColors()
 
   mermaid.initialize({
@@ -394,7 +402,9 @@ export function DiagramBlock({ code, language }: CodeChild) {
 }
 
 async function renderMermaidDiagram(id: string, code: string) {
-  initializeMermaid()
+  const mermaid = await loadMermaid()
+
+  await initializeMermaid()
 
   return (await mermaid.render(id, code)).svg
 }

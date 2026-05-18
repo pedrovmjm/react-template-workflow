@@ -24,6 +24,36 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       sourcemap: appEnv !== "production",
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) {
+              return
+            }
+
+            if (
+              id.includes("/mermaid/") ||
+              id.includes("/cytoscape") ||
+              id.includes("/katex/") ||
+              id.includes("/d3-")
+            ) {
+              return "mermaid"
+            }
+
+            if (id.includes("/recharts/")) {
+              return "charts"
+            }
+
+            if (
+              id.includes("/react-markdown/") ||
+              id.includes("/remark-gfm/") ||
+              id.includes("/rehype-sanitize/")
+            ) {
+              return "markdown"
+            }
+          },
+        },
+      },
     },
     resolve: {
       alias: {

@@ -1,11 +1,25 @@
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 
 import { AppShell, type AppPage } from "@/components/layout/app-shell"
-import { ChatPage } from "@/pages/chat/ChatPage"
-import { DesignSystemPage } from "@/pages/design-system/DesignSystemPage"
-import { HomePage } from "@/pages/home/HomePage"
-import { NotFoundPage } from "@/pages/not-found/NotFoundPage"
-import { WorkflowPage } from "@/pages/workflow/WorkflowPage"
+import { Spinner } from "@/components/ui/spinner"
+
+const ChatPage = lazy(() =>
+  import("@/pages/chat/ChatPage").then((module) => ({ default: module.ChatPage })),
+)
+const DesignSystemPage = lazy(() =>
+  import("@/pages/design-system/DesignSystemPage").then((module) => ({
+    default: module.DesignSystemPage,
+  })),
+)
+const HomePage = lazy(() =>
+  import("@/pages/home/HomePage").then((module) => ({ default: module.HomePage })),
+)
+const NotFoundPage = lazy(() =>
+  import("@/pages/not-found/NotFoundPage").then((module) => ({ default: module.NotFoundPage })),
+)
+const WorkflowPage = lazy(() =>
+  import("@/pages/workflow/WorkflowPage").then((module) => ({ default: module.WorkflowPage })),
+)
 
 type RoutePage = AppPage | "not-found"
 
@@ -27,6 +41,15 @@ function readPageFromPath(): RoutePage {
 
 function routeForPage(page: AppPage) {
   return appRoutes[page]
+}
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-48 items-center justify-center gap-2 text-sm text-muted-foreground">
+      <Spinner className="size-4" />
+      Carregando pagina
+    </div>
+  )
 }
 
 export default function App() {
@@ -55,13 +78,15 @@ export default function App() {
 
   return (
     <AppShell currentPage={shellPage} onNavigate={handleNavigate}>
-      {currentPage === "chat" ? <ChatPage /> : null}
-      {currentPage === "design-system" ? <DesignSystemPage /> : null}
-      {currentPage === "home" ? <HomePage /> : null}
-      {currentPage === "workflow" ? <WorkflowPage /> : null}
-      {currentPage === "not-found" ? (
-        <NotFoundPage onNavigateHome={() => handleNavigate("home")} />
-      ) : null}
+      <Suspense fallback={<PageLoader />}>
+        {currentPage === "chat" ? <ChatPage /> : null}
+        {currentPage === "design-system" ? <DesignSystemPage /> : null}
+        {currentPage === "home" ? <HomePage /> : null}
+        {currentPage === "workflow" ? <WorkflowPage /> : null}
+        {currentPage === "not-found" ? (
+          <NotFoundPage onNavigateHome={() => handleNavigate("home")} />
+        ) : null}
+      </Suspense>
     </AppShell>
   )
 }

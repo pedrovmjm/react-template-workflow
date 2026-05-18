@@ -1,12 +1,34 @@
+import { lazy, Suspense } from "react"
 import ReactMarkdown, { type Components } from "react-markdown"
+import { Loader2Icon } from "lucide-react"
 import rehypeSanitize from "rehype-sanitize"
 import remarkGfm from "remark-gfm"
 
 import { cn } from "@/lib/utils"
 import { CopyableCodeBlock } from "./copyable-code-block"
-import { DiagramBlock } from "./diagram-block"
 import { MarkdownTable } from "./markdown-table"
-import { readCodeChild } from "./markdown-utils"
+import { type CodeChild, readCodeChild } from "./markdown-utils"
+
+const DiagramBlock = lazy(() =>
+  import("./diagram-block").then((module) => ({ default: module.DiagramBlock })),
+)
+
+function DiagramBlockFallback() {
+  return (
+    <div className="my-3 flex min-h-72 items-center justify-center gap-2 rounded-md border bg-muted/40 text-sm text-muted-foreground">
+      <Loader2Icon className="size-4 animate-spin" aria-hidden="true" />
+      Carregando diagrama
+    </div>
+  )
+}
+
+function DiagramCodeBlock(props: CodeChild) {
+  return (
+    <Suspense fallback={<DiagramBlockFallback />}>
+      <DiagramBlock {...props} />
+    </Suspense>
+  )
+}
 
 const markdownComponents: Components = {
   a({ children, href }) {
@@ -40,7 +62,7 @@ const markdownComponents: Components = {
     }
 
     if (codeChild.language === "mermaid" || codeChild.language === "plantuml" || codeChild.language === "puml") {
-      return <DiagramBlock {...codeChild} />
+      return <DiagramCodeBlock {...codeChild} />
     }
 
     return <CopyableCodeBlock {...codeChild} />
@@ -77,3 +99,4 @@ export function RichMarkdownMessage({ content }: { content: string }) {
     </div>
   )
 }
+
