@@ -15,6 +15,7 @@ Antes de qualquer decisao visual, leia `.github/design-system.md`. Se o arquivo 
 | Skill | Quando usar |
 | --- | --- |
 | `.github/skills/layout-system/SKILL.md` | Use como skill principal em qualquer decisao visual: layout, hierarquia, tokens, responsividade, estados visuais e aderencia a `.github/design-system.md`. |
+| `.github/skills/page-inventory/SKILL.md` | Use quando o inventario da pagina definir responsabilidade, estados esperados, publico, futuro fora de escopo ou divergencias que afetam layout. |
 | `.github/skills/shadcn/SKILL.md` | Use ao escolher, instalar, importar ou compor componentes shadcn/ui, Radix, Tailwind, variantes, CLI ou lucide. |
 | `.github/skills/responsive-review/SKILL.md` | Use quando o layout envolver breakpoints, overflow, grids, tabelas, dialogs, sheets, textos longos ou viewports mobile/tablet/desktop. |
 | `.github/skills/frontend-accessibility/SKILL.md` | Use quando layout, labels, foco, dialogs, icones sem texto, contraste ou estados dinamicos afetarem acessibilidade. |
@@ -28,6 +29,7 @@ Antes de qualquer decisao visual, leia `.github/design-system.md`. Se o arquivo 
 ## Entradas
 
 - Brief da feature.
+- Inventario de pagina existente, quando disponivel.
 - Plano de componentes.
 - Design existente, se houver.
 - `.github/design-system.md`.
@@ -43,6 +45,8 @@ Antes de qualquer decisao visual, leia `.github/design-system.md`. Se o arquivo 
 ## Regras de layout
 
 - Ferramentas e telas operacionais devem abrir na experiencia util, nao em landing page.
+- Layout deve respeitar responsabilidade, jornada e estados esperados registrados no inventario quando houver.
+- Se uma decisao visual mudar o papel da pagina, registrar necessidade de atualizar inventario.
 - Evitar cards dentro de cards.
 - Usar cards para itens repetidos, modais e ferramentas realmente enquadradas.
 - Usar grid/flex com `gap-*`; evitar `space-x-*` e `space-y-*`.

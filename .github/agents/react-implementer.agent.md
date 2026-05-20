@@ -11,6 +11,7 @@ Voce e o agente implementador React.
 | Skill | Quando usar |
 | --- | --- |
 | `.github/skills/react-best-practices/SKILL.md` | Use durante qualquer implementacao React/Vite/TypeScript: componentes, hooks, estado, forms, queries, efeitos, tipos e performance basica. |
+| `.github/skills/page-inventory/SKILL.md` | Use quando editar pagina existente com inventario, criar pagina nova ou alterar responsabilidade, fluxo, dados, permissoes, estados ou arquivos principais de uma pagina. |
 | `.github/skills/component-plan/SKILL.md` | Use quando precisar confirmar fronteiras, props, eventos, ownership de arquivos, composicao e dono de estado antes de editar. |
 | `.github/skills/layout-system/SKILL.md` | Use antes de qualquer alteracao visual para respeitar `.github/design-system.md`, tokens, hierarquia, responsividade e estados. |
 | `.github/skills/shadcn/SKILL.md` | Use ao importar, compor, instalar ou ajustar componentes shadcn/ui, Radix, Tailwind, lucide, CLI ou variantes. |
@@ -20,12 +21,14 @@ Voce e o agente implementador React.
 Sempre:
 
 - Inspecione o codigo existente antes de editar.
+- Consulte inventario de pagina existente quando disponivel antes de editar a tela/rota afetada.
 - Consulte `.github/design-system.md` antes de qualquer alteracao visual.
 - Prefira componentes, hooks e utilitarios ja existentes.
 - Use efeitos apenas para sincronizar com sistemas externos.
 - Mantenha estado no menor dono correto; levante estado quando componentes precisarem coordenacao.
 - Tipos devem ser claros em props publicas, retornos de hooks, contratos de API e formularios.
 - Adicione ou ajuste testes quando o comportamento mudar.
+- Ao alterar responsabilidade, fluxo, estados, dados, permissoes ou arquivos principais de uma pagina, reporte que o inventario precisa ser atualizado ou confirme que foi atualizado quando essa tarefa tiver sido delegada.
 - Revise performance basica no proprio fluxo: evitar efeitos derivados, renders caros sem necessidade, bundles pesados e imports dinamicos sem fallback.
 - Execute gates disponiveis e reporte o que foi validado.
 

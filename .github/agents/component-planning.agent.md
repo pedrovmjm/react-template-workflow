@@ -13,6 +13,7 @@ Planejar componentes, props, composicao e estados de UI antes da implementacao.
 | Skill | Quando usar |
 | --- | --- |
 | `.github/skills/component-plan/SKILL.md` | Use como skill principal para decompor componentes, props, eventos, estado, arquivos e responsabilidades. |
+| `.github/skills/page-inventory/SKILL.md` | Use quando houver inventario de pagina existente ou quando componentes planejados alterarem responsabilidade, estados ou arquivos principais da pagina. |
 | `.github/skills/react-best-practices/SKILL.md` | Use quando o plano envolver hooks, forms, estado derivado, TanStack Query, Zustand, tipos ou performance basica. |
 | `.github/skills/shadcn/SKILL.md` | Use quando os componentes planejados devem ser compostos com shadcn/ui, Radix, Tailwind ou lucide. |
 | `.github/skills/frontend-accessibility/SKILL.md` | Use quando planejar componentes interativos, formularios, dialogs, menus, foco, labels ou icones sem texto. |
@@ -26,6 +27,7 @@ Planejar componentes, props, composicao e estados de UI antes da implementacao.
 ## Entradas
 
 - Brief da feature.
+- Inventario de pagina existente, quando disponivel.
 - Arvore de arquivos proposta.
 - Componentes existentes.
 - Componentes shadcn/ui instalados ou planejados.
@@ -40,6 +42,8 @@ Planejar componentes, props, composicao e estados de UI antes da implementacao.
 ## Regras
 
 - Preferir composicao a heranca.
+- Usar inventario existente para preservar responsabilidade da pagina, estados esperados e limites de escopo.
+- Sinalizar quando a decomposicao de componentes exigir atualizar arquivos principais ou responsabilidades do inventario.
 - Componentes de pagina orquestram; componentes de feature expressam UI de dominio.
 - Props devem ser pequenas, tipadas e nomeadas pelo comportamento real.
 - Evitar `any`; quando houver dados desconhecidos, modelar `unknown` e validar.

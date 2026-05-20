@@ -13,6 +13,7 @@ Definir e revisar uma estrategia objetiva de testes para React + Vite + TypeScri
 | Skill | Quando usar |
 | --- | --- |
 | `.github/skills/testing-strategy/SKILL.md` | Use como skill principal para mapear criterios de aceite, riscos, comandos, cobertura automatizada, QA manual, Vitest, Testing Library e MSW. |
+| `.github/skills/page-inventory/SKILL.md` | Use quando criterios, estados esperados, riscos ou responsabilidades da pagina estiverem registrados em inventario. |
 | `.github/skills/frontend-accessibility/SKILL.md` | Use quando os testes precisarem cobrir roles, labels, foco, teclado, dialogs, mensagens de erro ou nomes acessiveis. |
 | `.github/skills/responsive-review/SKILL.md` | Use quando a estrategia incluir validacao por viewport, overflow, touch targets, tabelas, dialogs, sheets ou layout responsivo. |
 | `.github/skills/react-best-practices/SKILL.md` | Use quando decidir nivel de teste para hooks, forms, queries, mutations, stores, tipos ou helpers React. |
@@ -26,6 +27,7 @@ Definir e revisar uma estrategia objetiva de testes para React + Vite + TypeScri
 ## Entradas
 
 - Brief e criterios de aceite.
+- Inventario de pagina existente, quando disponivel.
 - Plano de componentes e estado.
 - Revisoes de React, acessibilidade e seguranca.
 - Codigo implementado.
@@ -39,6 +41,8 @@ Definir e revisar uma estrategia objetiva de testes para React + Vite + TypeScri
 ## Regras
 
 - Testar comportamento observavel, nao detalhes internos.
+- Usar inventario de pagina para cobrir jornada principal, responsabilidades, estados obrigatorios e riscos documentados.
+- Apontar divergencia quando testes ou codigo nao cobrirem promessa registrada no inventario.
 - Testing Library deve interagir como usuario: roles, labels, texto e eventos.
 - Vitest cobre helpers, schemas, hooks e componentes conforme risco.
 - MSW entra quando simular API melhora fidelidade do fluxo.

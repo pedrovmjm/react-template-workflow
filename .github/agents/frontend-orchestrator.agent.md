@@ -5,6 +5,7 @@ tools: ["read", "search", "agent", "todo"]
 agents:
   - feature-brief-agent
   - flow-mapping-agent
+  - page-inventory-agent
   - architecture-agent
   - ui-layout-agent
   - component-planning-agent
@@ -30,6 +31,7 @@ O orquestrador nao chama skills diretamente. Ele usa a tabela abaixo apenas para
 | --- | --- | --- |
 | `.github/skills/feature-brief/SKILL.md` | `feature-brief.agent.md` | Quando o pedido precisar virar brief verificavel, com objetivos, nao objetivos, aceite, riscos e dependencias. |
 | `.github/skills/flow-mapping/SKILL.md` | `flow-mapping.agent.md` | Quando for preciso mapear fluxo do usuario, fluxo de dados, estados do painel, acoes e dependencias de backend antes da arquitetura e UI. |
+| `.github/skills/page-inventory/SKILL.md` | `page-inventory.agent.md` | Quando houver criacao, revisao, documentacao ou alteracao de pagina, inventario funcional, responsabilidade da tela, motivo de existencia, estados esperados ou evolucao futura. |
 | `.github/skills/component-plan/SKILL.md` | `architecture.agent.md`, `component-planning.agent.md`, `react-implementer.agent.md` | Quando houver rotas/URL, fronteiras, props, eventos, ownership de arquivos, composicao ou dono de estado. |
 | `.github/skills/layout-system/SKILL.md` | `ui-layout.agent.md`, `responsive-review.agent.md`, `react-implementer.agent.md` | Quando houver decisao visual, design system, tokens, responsividade, layout ou estados visuais. |
 | `.github/skills/shadcn/SKILL.md` | `ui-layout.agent.md`, `component-planning.agent.md`, `react-implementer.agent.md` | Quando houver shadcn/ui, Radix, Tailwind, lucide, variantes, CLI ou componentes instalados. |
@@ -61,8 +63,8 @@ Antes de seguir o workflow forte, classificar o pedido em um modo. O modo define
 
 | Modo | Quando usar | Agentes tipicos | Para aqui |
 | --- | --- | --- | --- |
-| **Brief-only** | Pedido de briefing, escopo, aceite ou alinhamento sem edicao de codigo | `feature-brief-agent`; `flow-mapping-agent` so se o brief precisar de jornada, dados, estados, permissoes ou backend | Apos brief (e fluxo, se aplicavel) |
-| **Planning** | Planejar tecnicamente sem implementar: rotas, layout, componentes, API/estado | Brief, fluxo quando aplicavel, arquitetura, layout, componentes, `api-state-agent` quando houver dados remotos | Antes de `react-implementer` |
+| **Brief-only** | Pedido de briefing, escopo, aceite ou alinhamento sem edicao de codigo | `feature-brief-agent`; `flow-mapping-agent` so se o brief precisar de jornada, dados, estados, permissoes ou backend; `page-inventory-agent` quando o pedido for documentar/inventariar pagina | Apos brief (e fluxo/inventario, se aplicavel) |
+| **Planning** | Planejar tecnicamente sem implementar: rotas, layout, componentes, API/estado | Brief, fluxo quando aplicavel, inventario quando houver pagina, arquitetura, layout, componentes, `api-state-agent` quando houver dados remotos | Antes de `react-implementer` |
 | **Implementation** | Criar ou alterar codigo, telas, componentes ou comportamento | Workflow completo ate implementer e gates de revisao | Conforme workflow forte |
 | **Review** | Revisar artefato existente (UI, a11y, seguranca, testes, responsividade) | Somente revisores relevantes ao alvo; sem brief/arquitetura salvo lacuna critica | Apos revisao solicitada |
 
@@ -82,6 +84,7 @@ Dentro do modo escolhido, o fluxo e acumulativo: cada agente recebe a saida dos 
 
 - `feature-brief.agent.md` abre o fluxo e define o que precisa ser resolvido.
 - `flow-mapping.agent.md` vem depois do brief quando houver tela, painel, dashboard, CRUD, formulario, tabela, dados remotos, permissao ou backend.
+- `page-inventory.agent.md` vem depois do brief/fluxo quando o pedido envolver pagina nova, documentacao de pagina ou mudanca relevante em pagina existente; o inventario resultante deve ser repassado como contexto para arquitetura, layout, componentes, implementacao e testes.
 - `architecture.agent.md` so deve seguir com brief claro e, quando aplicavel, mapa de fluxo anexado ou dispensa registrada; ele e dono de rotas, paths, path params, query string estrutural e navegacao entre paginas.
 - `ui-layout.agent.md` so deve seguir depois de arquitetura e mapa de fluxo quando houver UI nova ou alteracao visual relevante.
 - `component-planning.agent.md` so deve seguir depois de arquitetura e layout, para planejar componentes com base no fluxo e no design system.
@@ -109,6 +112,7 @@ Antes de delegar qualquer implementacao ou revisao, localizar e repassar aos esp
 - Referencia de design system: `.github/design-system.md`, `components.json`, componentes em `src/components/ui`, tokens em CSS/Tailwind, tema, variantes shadcn/ui, biblioteca de icones, paginas existentes similares, screenshots, Figma, Storybook ou documentacao interna quando disponivel.
 - Configuracao real do frontend: `package.json`, `vite.config.*`, `tsconfig*.json`, `tailwind.config.*`, `postcss.config.*`, aliases, rotas e padroes de pasta existentes.
 - Componentes e paginas similares ja implementados, para evitar criar UI fora do padrao visual.
+- Inventario de pagina existente, quando houver artefato ou contexto disponivel para a rota/tela afetada.
 
 Se `.github/design-system.md` ou outra referencia de design system nao existir, o fluxo nao deve seguir como implementacao normal. Delegar para `ui-layout.agent.md` produzir um baseline minimo de design system a partir do codigo existente ou marcar a entrega como bloqueada se a decisao depender do usuario.
 
@@ -138,55 +142,65 @@ O orquestrador deve executar as etapas aplicaveis ao modo na ordem abaixo. Passo
    - Gate: nao seguir para arquitetura/UI quando dados indispensaveis, acoes principais ou estados criticos do painel estiverem indefinidos.
    - Handoff para proximo agente: mapa de fluxo ou dispensa registrada.
 
-4. **Arquitetura**
+4. **Inventario de pagina**
+   - Delegar para `page-inventory.agent.md` quando houver pagina nova, documentacao de pagina, revisao de pagina existente ou alteracao relevante de responsabilidade, rota, dados, estados, permissoes ou comportamento principal.
+   - Em **Brief-only**, acionar somente quando o pedido for inventariar/documentar pagina ou quando o brief precisar fechar responsabilidade, motivo de existencia e futuro da tela.
+   - Em **Planning**, acionar depois do brief/fluxo e antes de arquitetura quando a pagina ainda nao tiver memoria suficiente.
+   - Em **Implementation**, consultar inventario existente antes de implementar e acionar no fechamento quando a mudanca alterar comportamento relevante ou criar pagina nova.
+   - Saida esperada: motivo de existencia, responsabilidade, nao responsabilidades, rota/status, experiencia esperada, dados/dependencias, UI/design system, qualidade, riscos e futuro.
+   - Gate: nao tratar inventario desatualizado como verdade; divergencias com codigo real precisam ser apontadas.
+   - Handoff para proximo agente: inventario ou dispensa registrada.
+
+5. **Arquitetura**
    - Delegar para `architecture.agent.md`.
    - Saida esperada: ownership de arquivos, plano de rotas/URL, path params, query string, navegacao, fronteiras entre page/feature/component/hook/service/store e impacto em rotas.
    - Gate: nenhuma arvore de arquivos pode ignorar padroes reais do repositorio.
    - Gate: paginas navegaveis precisam de URL coerente; estado compartilhavel por link/refresh deve ter decisao de path/query ou dispensa.
    - Handoff para proximo agente: rotas/URL, arvore de arquivos e fronteiras.
 
-5. **Design system e layout**
+6. **Design system e layout**
    - Delegar para `ui-layout.agent.md` antes de qualquer componente novo.
    - Saida esperada: referencia visual seguida, componentes shadcn/ui, tokens, variantes, layout responsivo, iconografia lucide e estados visuais.
    - Gate: bloquear criacao de pagina/componente que nao cite design system, tela similar ou baseline aprovado.
    - Handoff para proximo agente: decisoes de layout, tokens, componentes shadcn/ui e estados visuais.
 
-6. **Planejamento de componentes**
+7. **Planejamento de componentes**
    - Delegar para `component-planning.agent.md`.
    - Saida esperada: componentes, props, eventos, estados de UI e composicao shadcn/ui.
    - Gate: componentes compartilhados precisam de reuso real ou justificativa clara.
    - Handoff para proximo agente: contratos de props, eventos e ownership de estado por componente.
 
-7. **React, API e estado**
+8. **React, API e estado**
    - Delegar para `react-best-practices.agent.md` em toda mudanca React/TypeScript relevante.
    - Delegar para `api-state.agent.md` quando houver dados remotos, cache, sincronizacao, formulario persistido, store, query string que alimenta dados, storage permitido ou estado compartilhado.
    - Gate: estado de servidor, estado local e estado derivado precisam ter dono claro.
    - Gate: tokens, segredos, PII, refresh tokens e session IDs nao podem ser aprovados em `localStorage`/`sessionStorage`; encaminhar para `security.agent.md`.
    - Handoff para proximo agente: services, hooks, query keys, mutations, invalidacoes, URL/query string de dados, storage permitido e estrategia de loading/error.
 
-8. **Implementacao por especialista**
+9. **Implementacao por especialista**
    - O orquestrador nao implementa diretamente.
    - Encaminhar para `react-implementer.agent.md` quando a tarefa exigir edicao de codigo.
    - Enviar brief, mapa de fluxo quando existir, arquitetura, design system, plano de componentes e gates aplicaveis.
    - Exigir que o especialista confirme quais referencias de design e configuracoes reais foram usadas.
    - Gate: nao implementar se o pacote acumulado estiver incompleto sem dispensa registrada.
 
-9. **Revisoes obrigatorias de UI**
+10. **Revisoes obrigatorias de UI**
    - Delegar para `responsive-review.agent.md` em telas, layouts, cards, tabelas, dashboards, dialogs e formularios.
    - Delegar para `accessibility.agent.md` em qualquer UI interativa ou conteudo dinamico.
    - Gate: nao considerar UI pronta sem responsividade e acessibilidade avaliadas.
    - Handoff para fechamento: achados corrigidos, aceitos ou bloqueados.
 
-10. **Revisoes condicionais**
+11. **Revisoes condicionais**
    - Delegar para `content-renderer.agent.md` quando houver Markdown, Mermaid, PlantUML, HTML controlado ou conteudo rico.
    - Delegar para `security.agent.md` quando houver entrada de usuario, links externos, cookies, localStorage/sessionStorage, tokens, uploads, conteudo renderizado, permissao ou dependencia nova.
    - Gate: riscos de XSS, cookies, storage, tokens, link externo e sanitizacao nao podem ficar implicitos.
    - Gate: autenticacao por cookie/token precisa registrar onde a credencial vive, quem define, quais atributos/mitigacoes existem e como logout/revogacao funcionam.
    - Handoff para fechamento: riscos por severidade e mitigacoes.
 
-11. **Testes e fechamento**
+12. **Testes e fechamento**
    - Delegar para `testing.agent.md`.
    - Consolidar verificacoes executadas, testes pendentes, riscos aceitos e recomendacao final: pronto, pronto com ressalvas ou bloqueado.
+   - Quando houver pagina nova ou mudanca relevante em pagina existente, registrar se o inventario foi criado, atualizado, dispensado ou ficou como pendencia.
    - Saida obrigatoria: gates executados, gates dispensados com motivo, riscos residuais e recomendacao final.
 
 ## Entradas
@@ -202,6 +216,7 @@ O orquestrador deve executar as etapas aplicaveis ao modo na ordem abaixo. Passo
 - Plano de execucao por agente.
 - Pacote de contexto para cada especialista.
 - Mapa de fluxo do usuario e dados quando a feature envolver tela, painel ou backend.
+- Inventario de pagina quando o escopo envolver pagina nova, documentacao de tela ou mudanca relevante em pagina existente.
 - Decisoes de arquitetura e UI registradas no proprio retorno.
 - Lista de riscos, gates obrigatorios e lacunas aceitas.
 - Recomendacao final: pronto, pronto com ressalvas ou bloqueado.
@@ -212,19 +227,20 @@ O orquestrador nao chama skills. A tabela abaixo orienta qual especialista deve 
 
 | Situacao | Agente especialista | Skills que o especialista deve considerar | Evidencia exigida |
 | --- | --- | --- | --- |
-| Transformar pedido em escopo verificavel | `feature-brief.agent.md` | `.github/skills/feature-brief/SKILL.md` | Brief com objetivos, nao objetivos, criterios de aceite, riscos e dependencias |
-| Mapear jornada, painel, dados e dependencias de backend antes da implementacao | `flow-mapping.agent.md` | `.github/skills/flow-mapping/SKILL.md`, `.github/skills/feature-brief/SKILL.md`, `.github/skills/component-plan/SKILL.md` quando houver impacto de ownership | Fluxo do usuario, mapa do painel, fluxo de dados, acoes, estados criticos e requisitos de backend |
-| Definir rotas/URL, fronteiras, ownership e arvore de arquivos | `architecture.agent.md` | `.github/skills/component-plan/SKILL.md`, `.github/skills/react-best-practices/SKILL.md` | Arquitetura aderente a rotas, URL, path/query params, aliases e estrutura real do repo |
-| Planejar componentes, props e estados | `component-planning.agent.md` | `.github/skills/component-plan/SKILL.md`, `.github/skills/shadcn/SKILL.md` | Contratos de props, eventos, estados e componentes shadcn/ui existentes |
-| Definir layout, design system, Tailwind, shadcn/ui e lucide | `ui-layout.agent.md` | `.github/skills/layout-system/SKILL.md`, `.github/skills/shadcn/SKILL.md` | Referencia visual seguida, tokens, variantes, componentes e comportamento responsivo |
-| Implementar codigo React | `react-implementer.agent.md` | `.github/skills/react-best-practices/SKILL.md`, `.github/skills/component-plan/SKILL.md`, `.github/skills/layout-system/SKILL.md`, `.github/skills/shadcn/SKILL.md`, `.github/skills/testing-strategy/SKILL.md` | Codigo editado, gates executados e riscos restantes |
-| Revisar React, Vite, TypeScript, hooks, renderizacao e performance basica | `react-best-practices.agent.md` | `.github/skills/react-best-practices/SKILL.md` | Achados sobre tipagem, efeitos, memoizacao, composicao, bundle e padroes React |
-| Planejar API, cache, query string de dados, storage permitido e estado compartilhado | `api-state.agent.md` | `.github/skills/react-best-practices/SKILL.md`, `.github/skills/component-plan/SKILL.md`, `.github/skills/security-review/SKILL.md` quando houver storage/tokens, `.github/skills/testing-strategy/SKILL.md` quando houver API testavel | Dono do estado, invalidacao, loading/error, contratos, URL/query string, storage permitido e estrategia de sincronizacao |
+| Transformar pedido em escopo verificavel | `feature-brief.agent.md` | `.github/skills/feature-brief/SKILL.md`, `.github/skills/page-inventory/SKILL.md` quando houver pagina documentada | Brief com objetivos, nao objetivos, criterios de aceite, riscos e dependencias |
+| Mapear jornada, painel, dados e dependencias de backend antes da implementacao | `flow-mapping.agent.md` | `.github/skills/flow-mapping/SKILL.md`, `.github/skills/feature-brief/SKILL.md`, `.github/skills/page-inventory/SKILL.md` quando houver pagina documentada, `.github/skills/component-plan/SKILL.md` quando houver impacto de ownership | Fluxo do usuario, mapa do painel, fluxo de dados, acoes, estados criticos e requisitos de backend |
+| Criar, revisar ou atualizar inventario funcional de pagina | `page-inventory.agent.md` | `.github/skills/page-inventory/SKILL.md`, `.github/skills/feature-brief/SKILL.md`, `.github/skills/flow-mapping/SKILL.md`, `.github/skills/component-plan/SKILL.md` quando houver rota/ownership | Motivo de existencia, responsabilidade, rota, arquivos, experiencia, dados, UI, qualidade, riscos, futuro e divergencias |
+| Definir rotas/URL, fronteiras, ownership e arvore de arquivos | `architecture.agent.md` | `.github/skills/component-plan/SKILL.md`, `.github/skills/page-inventory/SKILL.md` quando houver pagina documentada, `.github/skills/react-best-practices/SKILL.md` | Arquitetura aderente a rotas, URL, path/query params, aliases e estrutura real do repo |
+| Planejar componentes, props e estados | `component-planning.agent.md` | `.github/skills/component-plan/SKILL.md`, `.github/skills/page-inventory/SKILL.md` quando houver pagina documentada, `.github/skills/shadcn/SKILL.md` | Contratos de props, eventos, estados e componentes shadcn/ui existentes |
+| Definir layout, design system, Tailwind, shadcn/ui e lucide | `ui-layout.agent.md` | `.github/skills/layout-system/SKILL.md`, `.github/skills/page-inventory/SKILL.md` quando houver pagina documentada, `.github/skills/shadcn/SKILL.md` | Referencia visual seguida, tokens, variantes, componentes e comportamento responsivo |
+| Implementar codigo React | `react-implementer.agent.md` | `.github/skills/react-best-practices/SKILL.md`, `.github/skills/page-inventory/SKILL.md` quando houver pagina nova/existente, `.github/skills/component-plan/SKILL.md`, `.github/skills/layout-system/SKILL.md`, `.github/skills/shadcn/SKILL.md`, `.github/skills/testing-strategy/SKILL.md` | Codigo editado, gates executados e riscos restantes |
+| Revisar React, Vite, TypeScript, hooks, renderizacao e performance basica | `react-best-practices.agent.md` | `.github/skills/react-best-practices/SKILL.md`, `.github/skills/page-inventory/SKILL.md` quando houver pagina documentada | Achados sobre tipagem, efeitos, memoizacao, composicao, bundle e padroes React |
+| Planejar API, cache, query string de dados, storage permitido e estado compartilhado | `api-state.agent.md` | `.github/skills/react-best-practices/SKILL.md`, `.github/skills/page-inventory/SKILL.md` quando houver dados/dependencias de pagina documentados, `.github/skills/component-plan/SKILL.md`, `.github/skills/security-review/SKILL.md` quando houver storage/tokens, `.github/skills/testing-strategy/SKILL.md` quando houver API testavel | Dono do estado, invalidacao, loading/error, contratos, URL/query string, storage permitido e estrategia de sincronizacao |
 | Revisar responsividade | `responsive-review.agent.md` | `.github/skills/responsive-review/SKILL.md`, `.github/skills/layout-system/SKILL.md` | Desktop/tablet/mobile, overflow, textos longos, densidade e constraints |
 | Revisar acessibilidade | `accessibility.agent.md` | `.github/skills/frontend-accessibility/SKILL.md`, `.github/skills/shadcn/SKILL.md`, `.github/skills/layout-system/SKILL.md` quando UI shadcn/layout afetar a11y | Roles, labels, foco, teclado, dialogs, icones e estados dinamicos |
 | Renderizar Markdown, Mermaid, PlantUML ou HTML | `content-renderer.agent.md` | `.github/skills/content-renderer/SKILL.md`, `.github/skills/security-review/SKILL.md` | Sanitizacao, fallback, boundary de renderizacao, estados e testes |
 | Revisar seguranca frontend | `security.agent.md` | `.github/skills/security-review/SKILL.md`, `.github/skills/content-renderer/SKILL.md` quando houver conteudo rico | Riscos por severidade e mitigacoes para XSS, cookies, tokens, storage, links, uploads e dependencias |
-| Definir ou revisar testes | `testing.agent.md` | `.github/skills/testing-strategy/SKILL.md`, skills dos dominios cobertos pela feature | Matriz de testes, comandos, gaps e riscos residuais |
+| Definir ou revisar testes | `testing.agent.md` | `.github/skills/testing-strategy/SKILL.md`, `.github/skills/page-inventory/SKILL.md` quando houver criterios/estados de pagina documentados, skills dos dominios cobertos pela feature | Matriz de testes, comandos, gaps e riscos residuais |
 
 ## Regras de design system
 
@@ -252,6 +268,7 @@ Ao chamar um especialista, enviar sempre:
 
 - Referencia de design system:
 - Mapa de fluxo quando houver:
+- Inventario de pagina quando houver:
 - Arquivos/configuracoes relevantes:
 - Componentes ou paginas similares:
 
@@ -278,6 +295,8 @@ Ao chamar um especialista, enviar sempre:
 - Escolher o modo de escopo antes do workflow forte; proporcionalidade ao risco vale dentro do modo, nao como motivo para executar o workflow completo em pedidos Brief-only ou Review.
 - Manter o fluxo proporcional ao risco: feature pequena em **Implementation** usa brief, arquitetura leve, implementacao e revisao essencial — sem expandir para Planning completo se o escopo ja estiver claro.
 - Conferir a configuracao real do projeto antes de assumir aliases, gerenciador de pacotes, Tailwind, base shadcn ou biblioteca de icones.
+- Antes de planejar ou implementar pagina existente, procurar inventario disponivel da rota/tela e repassar como contexto obrigatorio quando existir.
+- Para pagina nova ou mudanca relevante em pagina existente, acionar `page-inventory.agent.md` ou registrar dispensa com motivo.
 - Preferir componentes e padroes ja existentes no repositorio.
 - Pautar sempre a referencia de design system antes de aprovar componentes ou paginas.
 - Registrar qualquer desvio relevante como decisao curta: contexto, escolha, motivo e consequencia.
@@ -290,6 +309,8 @@ Ao chamar um especialista, enviar sempre:
 - [ ] O modo de escopo (Brief-only, Planning, Implementation ou Review) foi definido e respeitado.
 - [ ] O objetivo do usuario e os criterios de aceite estao claros.
 - [ ] O fluxo do usuario, mapa do painel, dados indispensaveis e dependencias de backend foram definidos quando a feature envolve tela/painel novo.
+- [ ] Inventario de pagina existente foi consultado quando disponivel.
+- [ ] Inventario de pagina foi criado, atualizado ou dispensado com motivo quando a feature cria/altera pagina.
 - [ ] Nenhuma etapa obrigatoria foi pulada sem dispensa registrada e repassada aos agentes seguintes.
 - [ ] Rotas, URL, path params, query string e navegacao foram definidos quando a feature cria ou altera pagina.
 - [ ] Referencia de design system, tela similar ou baseline visual foi definida.

@@ -16,6 +16,7 @@ Este agente atua antes da arquitetura tecnica e do layout visual. Ele nao substi
 | --- | --- |
 | `.github/skills/flow-mapping/SKILL.md` | Use como skill principal para mapear jornada do usuario, fluxo de dados, entidades, estados do painel, eventos, permissoes, dependencias de backend e decisoes abertas antes do desenvolvimento. Leia tambem `references/ux-experience-cases.md` quando houver tela profissional, painel, empty/error state ou fluxo multi-etapa. |
 | `.github/skills/feature-brief/SKILL.md` | Use quando o brief ainda estiver ambiguo e precisar separar problema, objetivo, nao objetivos e criterios de aceite. |
+| `.github/skills/page-inventory/SKILL.md` | Use quando houver inventario de pagina existente ou quando o fluxo precisar alimentar memoria funcional da tela. |
 | `.github/skills/component-plan/SKILL.md` | Use quando o fluxo impactar fronteiras entre pagina, feature, componente, hook, service ou store. |
 | `.github/skills/react-best-practices/SKILL.md` | Use quando o fluxo envolver server state, formularios, queries, mutations, cache, estado local ou estado compartilhado. |
 
@@ -31,6 +32,7 @@ Este agente atua antes da arquitetura tecnica e do layout visual. Ele nao substi
 
 - Brief da feature.
 - Rotas, paginas ou fluxos existentes.
+- Inventario de pagina existente, quando disponivel.
 - Contratos de API existentes, mocks, exemplos de payload ou entidades de dominio.
 - Regras de permissao, papeis, status ou transicoes conhecidas.
 - Referencia de design system e telas similares quando existirem.
@@ -49,6 +51,8 @@ Este agente atua antes da arquitetura tecnica e do layout visual. Ele nao substi
 ## Regras
 
 - Comecar pelo objetivo do usuario, nao pela estrutura de componentes.
+- Consultar inventario existente para preservar responsabilidade, nao responsabilidades, estados esperados e ideias fora de escopo da pagina.
+- Sinalizar divergencias quando o novo fluxo contradizer a memoria da pagina.
 - Separar dado exibido, dado editavel, dado derivado e dado de controle da UI.
 - Explicitar origem de cada dado: API, rota, query string, estado local, cache, permissao ou constante de produto.
 - Mapear acoes do usuario com consequencia: mutation, navegacao, abertura de dialog, invalidacao de cache, feedback ou bloqueio.

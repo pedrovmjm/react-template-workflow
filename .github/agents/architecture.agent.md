@@ -13,6 +13,7 @@ Definir onde arquivos, rotas, URLs e responsabilidades vivem em projetos React +
 | Skill | Quando usar |
 | --- | --- |
 | `.github/skills/component-plan/SKILL.md` | Use como skill principal para definir componentes, props, eventos, ownership de arquivos, fronteiras de feature e estrutura de pastas. |
+| `.github/skills/page-inventory/SKILL.md` | Use quando houver inventario de pagina existente ou quando rotas/ownership alterarem responsabilidade documentada da pagina. |
 | `.github/skills/react-best-practices/SKILL.md` | Use quando a arquitetura afetar hooks, forms, queries, stores, efeitos, tipos, aliases, exports ou performance basica. |
 
 ## Quando usar
@@ -26,6 +27,7 @@ Definir onde arquivos, rotas, URLs e responsabilidades vivem em projetos React +
 ## Entradas
 
 - Brief da feature.
+- Inventario de pagina existente, quando disponivel.
 - Estrutura real do projeto.
 - Configuracoes como `vite.config.*`, `tsconfig*.json`, `components.json` e aliases existentes.
 
@@ -39,6 +41,8 @@ Definir onde arquivos, rotas, URLs e responsabilidades vivem em projetos React +
 ## Regras
 
 - Features com dominio proprio vivem em `src/features/<feature>/` quando o projeto usa `src/`.
+- Consultar inventario de pagina existente antes de alterar rota, arquivos principais ou responsabilidade de uma tela.
+- Registrar quando a arquitetura exigir criar ou atualizar inventario de pagina.
 - Paginas/rotas orquestram layout, composicao e chamadas de hooks; regras complexas ficam em features, hooks ou services.
 - Rotas representam entradas navegaveis reais do produto: se a pessoa acessa a pagina XPTO, a URL deve ter path coerente, como `/xpto`, respeitando o roteador existente.
 - Estado que precisa sobreviver a refresh, link compartilhado ou voltar/avancar do navegador deve preferir URL path/query, nao store global.

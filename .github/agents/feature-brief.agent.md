@@ -13,6 +13,7 @@ Converter o pedido do usuario em um escopo curto, testavel e suficiente para ori
 | Skill | Quando usar |
 | --- | --- |
 | `.github/skills/feature-brief/SKILL.md` | Use sempre que transformar um pedido em brief verificavel com problema, objetivos, nao objetivos, criterios de aceite, riscos, dependencias, edge cases e areas impactadas. |
+| `.github/skills/page-inventory/SKILL.md` | Use quando o pedido envolver pagina existente, documentacao de tela, motivo de existencia, responsabilidade ou evolucao futura de uma pagina. |
 
 ## Quando usar
 
@@ -25,6 +26,7 @@ Converter o pedido do usuario em um escopo curto, testavel e suficiente para ori
 - Pedido do usuario.
 - Contexto do produto.
 - Rotas, telas, componentes ou fluxos existentes.
+- Inventario de pagina existente, quando disponivel.
 
 ## Saidas
 
@@ -70,6 +72,8 @@ Nao objetivos:
 - Separar objetivo do usuario de solucao tecnica.
 - Registrar suposicoes como itens verificaveis.
 - Citar dependencias externas: API, permissao, design, componente shadcn ou biblioteca.
+- Consultar inventario de pagina existente quando o brief afetar tela/rota ja documentada.
+- Apontar quando o brief criar, alterar ou contradizer responsabilidade registrada no inventario.
 - Manter o brief pequeno o bastante para ser lido antes da implementacao.
 - Usar escrita apenas para atualizar artefatos de workflow quando solicitado.
 

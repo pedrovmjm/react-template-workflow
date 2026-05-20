@@ -13,6 +13,7 @@ Definir como a feature consome API, cacheia dados, invalida mutations, sincroniz
 | Skill | Quando usar |
 | --- | --- |
 | `.github/skills/react-best-practices/SKILL.md` | Use para decisoes de TanStack Query, hooks, forms, cache, mutations, Zustand, loading/error e separacao entre estado local, servidor e cliente compartilhado. |
+| `.github/skills/page-inventory/SKILL.md` | Use quando o inventario de pagina registrar dados, permissoes, estados obrigatorios, dependencias ou decisoes abertas que afetam API/estado. |
 | `.github/skills/component-plan/SKILL.md` | Use quando a decisao de estado afetar fronteiras entre pagina, feature, componente, hook, service ou store. |
 | `.github/skills/testing-strategy/SKILL.md` | Use quando houver API testavel, fluxos assincronos, mutations, MSW, estados de erro/loading ou regressao de cache. |
 | `.github/skills/security-review/SKILL.md` | Use junto com `security.agent.md` quando a decisao envolver cookies, tokens, localStorage, sessionStorage, dados sensiveis ou persistencia client-side. |
@@ -28,6 +29,7 @@ Definir como a feature consome API, cacheia dados, invalida mutations, sincroniz
 ## Entradas
 
 - Brief e plano de componentes.
+- Inventario de pagina existente, quando disponivel.
 - Contratos de API existentes.
 - Cliente HTTP, services, query client e stores ja existentes.
 
@@ -43,6 +45,8 @@ Definir como a feature consome API, cacheia dados, invalida mutations, sincroniz
 ## Regras
 
 - Estado de servidor usa TanStack Query quando houver cache, sincronizacao ou multiplos consumidores.
+- Consultar inventario para alinhar origem dos dados, permissoes, estados obrigatorios e dependencias da pagina.
+- Registrar necessidade de atualizar inventario quando dados, permissoes ou storage mudarem de forma relevante.
 - Estado local permanece local quando nao precisa ser compartilhado.
 - Estado compartilhavel por link, refresh ou historico deve preferir path/query string.
 - Zustand so entra para estado de cliente compartilhado, como preferencias de UI, filtros globais ou selecao cross-feature.

@@ -13,6 +13,7 @@ Revisar implementacoes React + Vite + TypeScript para manter componentes simples
 | Skill | Quando usar |
 | --- | --- |
 | `.github/skills/react-best-practices/SKILL.md` | Use como skill principal para revisar React, Vite, TypeScript, hooks, efeitos, forms, TanStack Query, Zustand, tipos, aliases, exports e performance basica. |
+| `.github/skills/page-inventory/SKILL.md` | Use quando revisar pagina existente com inventario ou quando uma mudanca React alterar responsabilidade, fluxo, estados ou arquivos principais da pagina. |
 | `.github/skills/testing-strategy/SKILL.md` | Use quando um achado tecnico exigir teste, quando houver lacuna de cobertura ou quando precisar recomendar validacoes proporcionais ao risco. |
 
 ## Quando usar
@@ -24,6 +25,7 @@ Revisar implementacoes React + Vite + TypeScript para manter componentes simples
 ## Entradas
 
 - Brief, arquitetura e plano de componentes.
+- Inventario de pagina existente, quando disponivel.
 - Codigo implementado.
 - Configuracoes reais: `package.json`, `vite.config.*`, `tsconfig*.json`, `eslint.config.*`, `components.json`.
 
@@ -36,6 +38,8 @@ Revisar implementacoes React + Vite + TypeScript para manter componentes simples
 ## Regras React
 
 - Componentes devem ser pequenos, previsiveis e orientados a composicao.
+- Quando houver inventario, verificar se a implementacao preserva responsabilidade, estados esperados e limites de escopo da pagina.
+- Apontar necessidade de atualizar inventario quando o codigo mudar comportamento principal, rota, dados ou estados.
 - Estado derivado simples nao deve virar `useEffect`.
 - Efeitos precisam de motivo claro: sincronizar com sistema externo, subscription, timer, evento global ou API do browser.
 - Logica complexa vai para hooks customizados ou helpers puros.
