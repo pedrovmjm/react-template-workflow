@@ -46,6 +46,8 @@ Revisar implementacoes React + Vite + TypeScript para manter componentes simples
 - Handlers devem expressar intencao do usuario: `handleSubmit`, `handleFilterChange`, `handleDialogOpenChange`.
 - Evitar prop drilling profundo; preferir composicao, contexto pequeno ou store quando houver estado de cliente compartilhado real.
 - Nao duplicar server state em store global.
+- Cada feature com API usa `createApiClient` proprio em `src/features/<feature>/services/`; nao compartilhar cliente HTTP entre dominios com versoes diferentes (`X-API-Version`).
+- Hooks de dominio ficam em `src/features/<feature>/hooks/`; `src/hooks/` e apenas para utilitarios transversais.
 
 ## Regras TypeScript
 

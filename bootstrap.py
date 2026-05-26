@@ -84,6 +84,16 @@ APP_EXPECTED_FILES = (
     Path("src/index.css"),
     Path("src/vite-env.d.ts"),
     Path("src/config/app-env.ts"),
+    Path("src/lib/api/types.ts"),
+    Path("src/lib/api/api-errors.ts"),
+    Path("src/lib/api/read-helpers.ts"),
+    Path("src/lib/api/create-api-client.ts"),
+    Path("src/features/example/config.ts"),
+    Path("src/features/example/services/api-client.ts"),
+    Path("src/features/example/services/index.ts"),
+    Path("src/features/example/hooks/use-query.ts"),
+    Path("src/features/example/hooks/use-mutation.ts"),
+    Path("src/features/example/hooks/index.ts"),
     Path("src/components/layout/data-state.tsx"),
     Path("src/components/layout/app-shell.tsx"),
     Path("src/components/layout/page-header.tsx"),
@@ -123,10 +133,13 @@ APP_EXPECTED_DIRS = (
     Path("src/components/ui"),
     Path("src/config"),
     Path("src/features"),
+    Path("src/features/example"),
+    Path("src/features/example/services"),
+    Path("src/features/example/hooks"),
     Path("src/hooks"),
     Path("src/lib"),
+    Path("src/lib/api"),
     Path("src/pages"),
-    Path("src/services"),
 )
 
 SHADCN_STARTER_REQUIRED_FILES = (
@@ -192,8 +205,10 @@ APP_FILE_TEMPLATES: dict[Path, str] = {
 """,
     Path(".env.development"): """VITE_APP_ENV=development
 VITE_APP_NAME=React Template Workflow
-VITE_API_BASE_URL=http://localhost:8000
-VITE_ENABLE_MOCKS=true
+VITE_API_BASE_URL=/api
+VITE_API_PROXY_TARGET=http://localhost:8000
+VITE_API_VERSION=v1
+VITE_ENABLE_MOCKS=false
 VITE_DEV_HOST=0.0.0.0
 VITE_DEV_PORT=5173
 VITE_PREVIEW_PORT=4173
@@ -201,15 +216,64 @@ VITE_PREVIEW_PORT=4173
     Path(".env.production"): """VITE_APP_ENV=production
 VITE_APP_NAME=React Template Workflow
 VITE_API_BASE_URL=/api
+VITE_API_VERSION=v1
 VITE_ENABLE_MOCKS=false
 VITE_DEV_HOST=0.0.0.0
 VITE_DEV_PORT=5173
 VITE_PREVIEW_PORT=4173
 """,
-    Path(".env.example"): """VITE_APP_ENV=development
+    Path(".env.example"): """# =============================================================================
+# Ambiente da aplicacao
+# =============================================================================
+VITE_APP_ENV=development
 VITE_APP_NAME=React Template Workflow
-VITE_API_BASE_URL=http://localhost:8000
-VITE_ENABLE_MOCKS=true
+
+# =============================================================================
+# API global (defaults) — usados por features que NAO definem override proprio
+# =============================================================================
+# URL que o browser chama (em dev o Vite faz proxy de /api para o backend real).
+VITE_API_BASE_URL=/api
+
+# Destino real do backend no desenvolvimento (somente usado pelo proxy do Vite).
+VITE_API_PROXY_TARGET=http://localhost:8000
+
+# Versao default enviada no header X-API-Version para features sem override.
+VITE_API_VERSION=v1
+
+# =============================================================================
+# API por feature (override) — cada dominio pode ter versao/base proprias
+# =============================================================================
+# Padrao de nome: VITE_<FEATURE>_API_VERSION e VITE_<FEATURE>_API_BASE_URL
+# O cliente HTTP da feature le isso em src/features/<feature>/config.ts
+# e instancia createApiClient() em src/features/<feature>/services/api-client.ts.
+#
+# Exemplo: feature "example" (src/features/example/config.ts)
+#   - Se VITE_EXAMPLE_API_VERSION nao existir → usa VITE_API_VERSION (v1)
+#   - Se VITE_EXAMPLE_API_BASE_URL nao existir → usa VITE_API_BASE_URL (/api)
+#
+# Cenario A — duas features na mesma base e mesma versao (comum):
+#   VITE_API_VERSION=v1
+#   VITE_API_BASE_URL=/api
+#   (nao precisa definir VITE_EXAMPLE_* nem VITE_PEDIDOS_*)
+#
+# Cenario B — feature legada em v1, feature nova em v2 (mesmo backend):
+#   VITE_API_VERSION=v1
+#   VITE_PEDIDOS_API_VERSION=v2
+#   VITE_API_BASE_URL=/api
+#
+# Cenario C — feature apontando para outro gateway:
+#   VITE_API_BASE_URL=/api
+#   VITE_RELATORIOS_API_BASE_URL=https://relatorios.exemplo.com/api
+#   VITE_RELATORIOS_API_VERSION=v1
+#
+# Descomente para testar overrides da feature example:
+# VITE_EXAMPLE_API_VERSION=v1
+# VITE_EXAMPLE_API_BASE_URL=/api
+
+# =============================================================================
+# Dev server
+# =============================================================================
+VITE_ENABLE_MOCKS=false
 VITE_DEV_HOST=0.0.0.0
 VITE_DEV_PORT=5173
 VITE_PREVIEW_PORT=4173
@@ -232,6 +296,13 @@ export default defineConfig(({ mode }) => {
       host: env.VITE_DEV_HOST || "0.0.0.0",
       port: Number(env.VITE_DEV_PORT || 5173),
       strictPort: false,
+      proxy: {
+        "/api": {
+          changeOrigin: true,
+          target: env.VITE_API_PROXY_TARGET || "http://localhost:8000",
+          rewrite: (requestPath) => requestPath.replace(/^\\/api/, ""),
+        },
+      },
     },
     preview: {
       host: env.VITE_DEV_HOST || "0.0.0.0",
@@ -423,6 +494,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_ENV?: AppEnvironment
   readonly VITE_APP_NAME?: string
   readonly VITE_API_BASE_URL?: string
+  readonly VITE_API_VERSION?: string
+  readonly VITE_API_PROXY_TARGET?: string
   readonly VITE_ENABLE_MOCKS?: string
   readonly VITE_DEV_HOST?: string
   readonly VITE_DEV_PORT?: string
@@ -575,7 +648,8 @@ export const appEnv = {
   brandName: import.meta.env.VITE_BRAND_NAME ?? import.meta.env.VITE_APP_NAME ?? "React Template Workflow",
   brandLogoUrl: import.meta.env.VITE_BRAND_LOGO_URL ?? "",
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? "/api",
-  enableMocks: readBoolean(import.meta.env.VITE_ENABLE_MOCKS, import.meta.env.DEV),
+  apiDefaultVersion: import.meta.env.VITE_API_VERSION ?? "v1",
+  enableMocks: readBoolean(import.meta.env.VITE_ENABLE_MOCKS, false),
   isDevelopment: import.meta.env.DEV,
   isProduction: import.meta.env.PROD,
 } as const
@@ -978,6 +1052,33 @@ type FileUploadDropzoneProps = Omit<
   onFilesChange?: (files: File[]) => void
 }
 
+function fileKey(file: File) {
+  return `${file.name}-${file.size}`
+}
+
+function partitionIncomingFiles(incoming: File[], existing: File[]) {
+  const existingKeys = new Set(existing.map(fileKey))
+  const seenIncoming = new Set<string>()
+  const accepted: File[] = []
+  const duplicateNames: string[] = []
+
+  for (const file of incoming) {
+    const key = fileKey(file)
+
+    if (existingKeys.has(key) || seenIncoming.has(key)) {
+      if (!duplicateNames.includes(file.name)) {
+        duplicateNames.push(file.name)
+      }
+      continue
+    }
+
+    seenIncoming.add(key)
+    accepted.push(file)
+  }
+
+  return { accepted, duplicateNames }
+}
+
 function formatFileSize(size: number) {
   if (size < 1024) {
     return `${size} B`
@@ -1006,8 +1107,10 @@ function FileUploadDropzone({
   const generatedId = React.useId()
   const inputId = id ?? generatedId
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const errorId = `${inputId}-error`
   const [isDragging, setIsDragging] = React.useState(false)
   const [internalFiles, setInternalFiles] = React.useState<File[]>([])
+  const [validationError, setValidationError] = React.useState<string | null>(null)
   const selectedFiles = files ?? internalFiles
 
   const updateFiles = React.useCallback(
@@ -1028,10 +1131,61 @@ function FileUploadDropzone({
       return
     }
 
-    updateFiles(Array.from(fileList))
+    const incoming = Array.from(fileList)
+    const messages: string[] = []
+
+    if (!multiple) {
+      const { accepted, duplicateNames } = partitionIncomingFiles(
+        incoming.slice(0, 1),
+        selectedFiles,
+      )
+
+      if (duplicateNames.length > 0) {
+        messages.push(`O arquivo "${duplicateNames[0]}" já foi adicionado.`)
+      }
+
+      if (accepted.length > 0) {
+        updateFiles(accepted)
+      }
+
+      setValidationError(messages.length > 0 ? messages.join(" ") : null)
+
+      if (inputRef.current) {
+        inputRef.current.value = ""
+      }
+      return
+    }
+
+    const { accepted, duplicateNames } = partitionIncomingFiles(incoming, selectedFiles)
+
+    if (duplicateNames.length > 0) {
+      messages.push(
+        duplicateNames.length === 1
+          ? `O arquivo "${duplicateNames[0]}" já foi adicionado.`
+          : `Estes arquivos já foram adicionados: ${duplicateNames.join(", ")}.`,
+      )
+    }
+
+    const availableSlots = Math.max(maxFiles - selectedFiles.length, 0)
+    const filesToAdd = accepted.slice(0, availableSlots)
+
+    if (accepted.length > availableSlots) {
+      messages.push(`Limite de ${maxFiles} arquivos.`)
+    }
+
+    if (filesToAdd.length > 0) {
+      updateFiles([...selectedFiles, ...filesToAdd])
+    }
+
+    setValidationError(messages.length > 0 ? messages.join(" ") : null)
+
+    if (inputRef.current) {
+      inputRef.current.value = ""
+    }
   }
 
   function removeFile(fileName: string) {
+    setValidationError(null)
     updateFiles(selectedFiles.filter((file) => file.name !== fileName))
   }
 
@@ -1050,6 +1204,8 @@ function FileUploadDropzone({
       />
       <div
         aria-disabled={disabled}
+        aria-describedby={validationError ? errorId : undefined}
+        aria-invalid={validationError ? true : undefined}
         onDragEnter={(event) => {
           event.preventDefault()
           if (!disabled) {
@@ -1074,6 +1230,7 @@ function FileUploadDropzone({
         className={cn(
           "flex min-h-48 flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted p-6 text-center transition-colors",
           isDragging && "border-primary bg-primary/5",
+          validationError && "border-destructive ring-destructive/20",
           disabled && "pointer-events-none opacity-50",
         )}
       >
@@ -1097,11 +1254,17 @@ function FileUploadDropzone({
         </Button>
       </div>
 
+      {validationError ? (
+        <p id={errorId} role="alert" className="text-sm text-destructive">
+          {validationError}
+        </p>
+      ) : null}
+
       {selectedFiles.length > 0 ? (
         <div className="flex flex-col gap-2" aria-live="polite">
           {selectedFiles.map((file) => (
             <div
-              key={`${file.name}-${file.size}`}
+              key={fileKey(file)}
               className="flex items-center gap-3 rounded-md border bg-background px-3 py-2"
             >
               <FileIcon aria-hidden="true" />
@@ -4339,9 +4502,603 @@ const totalComponents = shadcnComponentGroups.reduce(
 
 const totalRequiredComponents = starterComponentNames.length
 """,
+    Path("src/lib/api/types.ts"): '''export type ApiErrorEnvelope = {
+  errors: Array<{
+    code: string
+    message: string
+    title: string
+  }>
+}
+
+export type ApiEnvelope<T> = {
+  data: T
+}
+
+export type ApiListEnvelope<T> = {
+  data: T[]
+  links?: Record<string, string>
+  meta?: {
+    page?: number
+    page_size?: number
+    total?: number
+    total_pages?: number
+  }
+}
+''',
+    Path("src/lib/api/read-helpers.ts"): '''export type UnknownRecord = Record<string, unknown>
+
+export function readString(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback
+}
+
+export function readOptionalString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined
+}
+
+export function readNumber(value: unknown): number | undefined {
+  return typeof value === "number" ? value : undefined
+}
+
+export function readRecord(value: unknown): UnknownRecord {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as UnknownRecord) : {}
+}
+
+export function readArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : []
+}
+''',
+    Path("src/lib/api/create-api-client.ts"): '''import { ApiRequestError, classifyFetchError, isServerUnavailableStatus } from "./api-errors"
+import { readRecord } from "./read-helpers"
+import type { ApiErrorEnvelope } from "./types"
+
+export type ApiClientConfig = {
+  apiVersion: string
+  baseUrl: string
+}
+
+export type ApiClient = ReturnType<typeof createApiClient>
+
+export function createApiClient(config: ApiClientConfig) {
+  const { apiVersion, baseUrl } = config
+
+  function apiUrl(path: string, params?: Record<string, string | number | undefined>) {
+    const normalizedBaseUrl = baseUrl.replace(/\/$/, "")
+    const url = new URL(`${normalizedBaseUrl}${path}`, window.location.origin)
+
+    Object.entries(params ?? {}).forEach(([key, value]) => {
+      if (value !== undefined && String(value).trim()) {
+        url.searchParams.set(key, String(value))
+      }
+    })
+
+    return url.toString()
+  }
+
+  async function parseApiResponse<T>(response: Response): Promise<T> {
+    if (response.status === 204) {
+      throw new Error("O recurso solicitado nao esta disponivel.")
+    }
+
+    const body = (await response.json().catch(() => null)) as unknown
+
+    if (!response.ok) {
+      const errorBody = readRecord(body) as ApiErrorEnvelope
+      const message = errorBody.errors?.[0]?.message ?? "A API nao conseguiu concluir a operacao."
+      throw new ApiRequestError(
+        message,
+        isServerUnavailableStatus(response.status) ? "server_unavailable" : "request_failed",
+        response.status,
+      )
+    }
+
+    return body as T
+  }
+
+  function buildHeaders(extra?: HeadersInit): HeadersInit {
+    return {
+      Accept: "application/json",
+      "X-API-Version": apiVersion,
+      ...extra,
+    }
+  }
+
+  async function request<T>(method: string, path: string, init?: RequestInit) {
+    try {
+      const response = await fetch(apiUrl(path), {
+        ...init,
+        headers: buildHeaders(init?.headers),
+        method,
+      })
+
+      return parseApiResponse<T>(response)
+    } catch (error) {
+      throw classifyFetchError(error)
+    }
+  }
+
+  async function get<T>(path: string, params?: Record<string, string | number | undefined>) {
+    try {
+      const response = await fetch(apiUrl(path, params), {
+        headers: buildHeaders(),
+      })
+
+      return parseApiResponse<T>(response)
+    } catch (error) {
+      throw classifyFetchError(error)
+    }
+  }
+
+  async function post<T>(path: string, payload: unknown) {
+    return request<T>("POST", path, {
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    })
+  }
+
+  async function postForm<T>(path: string, formData: FormData) {
+    return request<T>("POST", path, { body: formData })
+  }
+
+  async function put<T>(path: string, payload: unknown) {
+    return request<T>("PUT", path, {
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    })
+  }
+
+  async function del(path: string) {
+    try {
+      const response = await fetch(apiUrl(path), {
+        headers: buildHeaders(),
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        await parseApiResponse<unknown>(response)
+      }
+    } catch (error) {
+      throw classifyFetchError(error)
+    }
+  }
+
+  return {
+    apiUrl,
+    del,
+    get,
+    post,
+    postForm,
+    put,
+  }
+}
+',
+    Path("src/features/example/config.ts"): '''import { appEnv } from "@/config/app-env"
+
+/** Exemplo: cada feature pode definir versao e base URL proprias. */
+export const exampleApiConfig = {
+  apiVersion: import.meta.env.VITE_EXAMPLE_API_VERSION ?? appEnv.apiDefaultVersion,
+  baseUrl: import.meta.env.VITE_EXAMPLE_API_BASE_URL ?? appEnv.apiBaseUrl,
+} as const
+''',
+    Path("src/features/example/services/api-client.ts"): '''import { createApiClient } from "@/lib/api/create-api-client"
+
+import { exampleApiConfig } from "../config"
+
+export const exampleApi = createApiClient({
+  apiVersion: exampleApiConfig.apiVersion,
+  baseUrl: exampleApiConfig.baseUrl,
+})
+''',
+    Path("src/features/example/services/index.ts"): '''export { exampleApi } from "./api-client"
+''',
+    Path("src/features/example/hooks/use-query.ts"): '''import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
+
+import { type ApiFailureKind, ApiRequestError } from "@/lib/api/api-errors"
+
+export type QueryStatus = "idle" | "loading" | "success" | "error" | "retrying"
+
+export type QueryState<T> = {
+  data: T | undefined
+  error: string
+  failureKind: ApiFailureKind | null
+  status: QueryStatus
+  loading: boolean
+  failed: boolean
+  serverUnavailable: boolean
+  isRetrying: boolean
+  retryAttempt: number
+  reload: () => Promise<void>
+  cancel: () => void
+  setData: Dispatch<SetStateAction<T | undefined>>
+}
+
+export type UseQueryOptions = {
+  enabled?: boolean
+  /** Tentativas extras apos a primeira falha (padrao: 2). Use 0 para nao repetir automaticamente. */
+  maxRetries?: number
+  /** Intervalo entre tentativas em ms (padrao: 3000). */
+  retryDelayMs?: number
+}
+
+type RetrySignal = {
+  cancelled: boolean
+  timer?: number
+}
+
+function sleep(ms: number, signal: RetrySignal) {
+  return new Promise<void>((resolve) => {
+    signal.timer = window.setTimeout(() => {
+      if (!signal.cancelled) {
+        resolve()
+      }
+    }, ms)
+  })
+}
+
+function readQueryError(error: unknown): { message: string; kind: ApiFailureKind; serverUnavailable: boolean } {
+  if (error instanceof ApiRequestError) {
+    return {
+      message: error.message,
+      kind: error.kind,
+      serverUnavailable: error.kind === "server_unavailable" || error.kind === "network_error",
+    }
+  }
+
+  return {
+    message: error instanceof Error ? error.message : "Nao foi possivel carregar os dados.",
+    kind: "request_failed",
+    serverUnavailable: false,
+  }
+}
+
+/**
+ * Hook generico de leitura com retry controlado.
+ * queryFn deve ser estavel (useCallback no caller) ou passada via ref interna — evita loop de requisicoes.
+ */
+export function useQuery<T>(
+  queryFn: () => Promise<T>,
+  deps: ReadonlyArray<unknown> = [],
+  options: UseQueryOptions = {},
+): QueryState<T> {
+  const { enabled = true, maxRetries = 2, retryDelayMs = 3000 } = options
+
+  const [data, setData] = useState<T>()
+  const [error, setError] = useState("")
+  const [failureKind, setFailureKind] = useState<ApiFailureKind | null>(null)
+  const [status, setStatus] = useState<QueryStatus>("idle")
+  const [loading, setLoading] = useState(enabled)
+  const [failed, setFailed] = useState(false)
+  const [serverUnavailable, setServerUnavailable] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [retryAttempt, setRetryAttempt] = useState(0)
+
+  const queryFnRef = useRef(queryFn)
+  const optionsRef = useRef({ enabled, maxRetries, retryDelayMs })
+  const requestIdRef = useRef(0)
+  const retrySignalRef = useRef<RetrySignal>({ cancelled: false })
+
+  queryFnRef.current = queryFn
+  optionsRef.current = { enabled, maxRetries, retryDelayMs }
+
+  const cancel = useCallback(() => {
+    retrySignalRef.current.cancelled = true
+    if (retrySignalRef.current.timer !== undefined) {
+      window.clearTimeout(retrySignalRef.current.timer)
+      retrySignalRef.current.timer = undefined
+    }
+    requestIdRef.current += 1
+  }, [])
+
+  const runQuery = useCallback(async () => {
+    cancel()
+    const signal: RetrySignal = { cancelled: false }
+    retrySignalRef.current = signal
+
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
+
+    const { enabled: isEnabled, maxRetries: retriesLimit, retryDelayMs: delayMs } = optionsRef.current
+
+    if (!isEnabled) {
+      setLoading(false)
+      setStatus("idle")
+      setFailed(false)
+      setServerUnavailable(false)
+      setIsRetrying(false)
+      return
+    }
+
+    const totalAttempts = retriesLimit + 1
+
+    setError("")
+    setFailureKind(null)
+    setFailed(false)
+    setServerUnavailable(false)
+    setLoading(true)
+    setStatus("loading")
+    setIsRetrying(false)
+    setRetryAttempt(0)
+
+    for (let attempt = 0; attempt < totalAttempts; attempt += 1) {
+      if (signal.cancelled || requestIdRef.current !== requestId) {
+        return
+      }
+
+      setRetryAttempt(attempt)
+      setIsRetrying(attempt > 0)
+      setStatus(attempt > 0 ? "retrying" : "loading")
+      setLoading(true)
+
+      try {
+        const result = await queryFnRef.current()
+        if (signal.cancelled || requestIdRef.current !== requestId) {
+          return
+        }
+
+        setData(result)
+        setError("")
+        setFailureKind(null)
+        setFailed(false)
+        setServerUnavailable(false)
+        setIsRetrying(false)
+        setStatus("success")
+        setLoading(false)
+        return
+      } catch (queryError) {
+        if (signal.cancelled || requestIdRef.current !== requestId) {
+          return
+        }
+
+        const parsed = readQueryError(queryError)
+        const isLastAttempt = attempt >= totalAttempts - 1
+
+        if (!isLastAttempt) {
+          setError(`${parsed.message} Tentando novamente (${attempt + 1}/${retriesLimit})...`)
+          setFailureKind(parsed.kind)
+          setServerUnavailable(parsed.serverUnavailable)
+          setStatus("retrying")
+          setIsRetrying(true)
+          await sleep(delayMs, signal)
+          continue
+        }
+
+        setError(parsed.message)
+        setFailureKind(parsed.kind)
+        setFailed(true)
+        setServerUnavailable(parsed.serverUnavailable)
+        setIsRetrying(false)
+        setStatus("error")
+        setLoading(false)
+        return
+      }
+    }
+  }, [cancel])
+
+  useEffect(() => {
+    void runQuery()
+
+    return () => {
+      cancel()
+    }
+    // deps controlam quando refazer a leitura; queryFn vem via ref para nao gerar loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runQuery, enabled, maxRetries, retryDelayMs, ...deps])
+
+  return {
+    data,
+    error,
+    failureKind,
+    status,
+    loading,
+    failed,
+    serverUnavailable,
+    isRetrying,
+    retryAttempt,
+    reload: runQuery,
+    cancel,
+    setData,
+  }
+}
+',
+    Path("src/features/example/hooks/use-mutation.ts"): '''import { useCallback, useRef, useState } from "react"
+
+import { type ApiFailureKind, ApiRequestError } from "@/lib/api/api-errors"
+
+export type MutationStatus = "idle" | "loading" | "success" | "error" | "retrying"
+
+export type MutationState<TData, TVariables> = {
+  data: TData | undefined
+  error: string
+  failureKind: ApiFailureKind | null
+  status: MutationStatus
+  loading: boolean
+  failed: boolean
+  serverUnavailable: boolean
+  isRetrying: boolean
+  retryAttempt: number
+  mutate: (variables: TVariables) => Promise<TData | undefined>
+  reset: () => void
+  cancel: () => void
+}
+
+export type UseMutationOptions<TData, TVariables> = {
+  mutationFn: (variables: TVariables) => Promise<TData>
+  maxRetries?: number
+  retryDelayMs?: number
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
+}
+
+function readMutationError(error: unknown): { message: string; kind: ApiFailureKind; serverUnavailable: boolean } {
+  if (error instanceof ApiRequestError) {
+    return {
+      message: error.message,
+      kind: error.kind,
+      serverUnavailable: error.kind === "server_unavailable" || error.kind === "network_error",
+    }
+  }
+
+  return {
+    message: error instanceof Error ? error.message : "Nao foi possivel concluir a operacao.",
+    kind: "request_failed",
+    serverUnavailable: false,
+  }
+}
+
+/** Hook para POST/PUT/DELETE com retry controlado e sem reexecucao automatica. */
+export function useMutation<TData, TVariables = void>(
+  options: UseMutationOptions<TData, TVariables>,
+): MutationState<TData, TVariables> {
+  const { mutationFn, maxRetries = 1, retryDelayMs = 3000 } = options
+
+  const [data, setData] = useState<TData>()
+  const [error, setError] = useState("")
+  const [failureKind, setFailureKind] = useState<ApiFailureKind | null>(null)
+  const [status, setStatus] = useState<MutationStatus>("idle")
+  const [loading, setLoading] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const [serverUnavailable, setServerUnavailable] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [retryAttempt, setRetryAttempt] = useState(0)
+
+  const mutationFnRef = useRef(mutationFn)
+  const optionsRef = useRef({ maxRetries, retryDelayMs })
+  const requestIdRef = useRef(0)
+  const cancelledRef = useRef(false)
+
+  mutationFnRef.current = mutationFn
+  optionsRef.current = { maxRetries, retryDelayMs }
+
+  const cancel = useCallback(() => {
+    cancelledRef.current = true
+    requestIdRef.current += 1
+  }, [])
+
+  const reset = useCallback(() => {
+    cancel()
+    setData(undefined)
+    setError("")
+    setFailureKind(null)
+    setStatus("idle")
+    setLoading(false)
+    setFailed(false)
+    setServerUnavailable(false)
+    setIsRetrying(false)
+    setRetryAttempt(0)
+    cancelledRef.current = false
+  }, [cancel])
+
+  const mutate = useCallback(
+    async (variables: TVariables) => {
+      cancel()
+      cancelledRef.current = false
+
+      const requestId = requestIdRef.current + 1
+      requestIdRef.current = requestId
+
+      const { maxRetries: retriesLimit, retryDelayMs: delayMs } = optionsRef.current
+      const totalAttempts = retriesLimit + 1
+
+      setError("")
+      setFailureKind(null)
+      setFailed(false)
+      setServerUnavailable(false)
+      setLoading(true)
+      setStatus("loading")
+      setIsRetrying(false)
+      setRetryAttempt(0)
+
+      for (let attempt = 0; attempt < totalAttempts; attempt += 1) {
+        if (cancelledRef.current || requestIdRef.current !== requestId) {
+          return undefined
+        }
+
+        setRetryAttempt(attempt)
+        setIsRetrying(attempt > 0)
+        setStatus(attempt > 0 ? "retrying" : "loading")
+
+        try {
+          const result = await mutationFnRef.current(variables)
+          if (cancelledRef.current || requestIdRef.current !== requestId) {
+            return undefined
+          }
+
+          setData(result)
+          setStatus("success")
+          setLoading(false)
+          setIsRetrying(false)
+          return result
+        } catch (mutationError) {
+          if (cancelledRef.current || requestIdRef.current !== requestId) {
+            return undefined
+          }
+
+          const parsed = readMutationError(mutationError)
+          const isLastAttempt = attempt >= totalAttempts - 1
+
+          if (!isLastAttempt) {
+            setError(`${parsed.message} Tentando novamente (${attempt + 1}/${retriesLimit})...`)
+            setFailureKind(parsed.kind)
+            setServerUnavailable(parsed.serverUnavailable)
+            setStatus("retrying")
+            setIsRetrying(true)
+            await sleep(delayMs)
+            continue
+          }
+
+          setError(parsed.message)
+          setFailureKind(parsed.kind)
+          setFailed(true)
+          setServerUnavailable(parsed.serverUnavailable)
+          setIsRetrying(false)
+          setStatus("error")
+          setLoading(false)
+          return undefined
+        }
+      }
+
+      return undefined
+    },
+    [cancel],
+  )
+
+  return {
+    data,
+    error,
+    failureKind,
+    status,
+    loading,
+    failed,
+    serverUnavailable,
+    isRetrying,
+    retryAttempt,
+    mutate,
+    reset,
+    cancel,
+  }
+}
+',
+    Path("src/features/example/hooks/index.ts"): '''export { useMutation, type MutationState, type MutationStatus, type UseMutationOptions } from "./use-mutation"
+export {
+  useQuery,
+  type QueryState,
+  type QueryStatus,
+  type UseQueryOptions,
+} from "./use-query"
+',
     Path("src/components/ui/.gitkeep"): "",
     Path("src/hooks/.gitkeep"): "",
-    Path("src/services/.gitkeep"): "",
+    Path("src/features/.gitkeep"): "",
 }
 
 
@@ -4393,17 +5150,37 @@ SHADCN_COMPONENT_REPLACEMENTS: dict[Path, tuple[tuple[str, str], ...]] = {
     Path("src/components/ui/select.tsx"): (
         (
             "flex w-fit items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[placeholder]:text-muted-foreground data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground",
-            "flex w-fit items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[placeholder]:text-muted-foreground data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground",
+            "flex w-fit min-w-0 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm font-normal whitespace-nowrap text-foreground shadow-xs transition-[color,box-shadow,background-color,border-color] outline-none hover:border-foreground/20 hover:bg-muted/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-[state=open]:border-ring data-[state=open]:bg-background data-[state=open]:ring-[3px] data-[state=open]:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[placeholder]:text-muted-foreground data-[size=default]:h-10 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg]:transition-transform [&_svg]:duration-200 [&_svg:not([class*='text-'])]:text-muted-foreground data-[state=open]:[&_svg]:rotate-180 data-[state=open]:[&_svg]:text-foreground",
+        ),
+        (
+            '<ChevronDownIcon className="size-4 opacity-50" />',
+            '<ChevronDownIcon className="size-4 opacity-70" />',
+        ),
+        (
+            "relative z-50 max-h-(--radix-select-content-available-height) min-w-[8rem] origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md",
+            "relative z-50 max-h-(--radix-select-content-available-height) min-w-[8rem] origin-(--radix-select-content-transform-origin) overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-lg",
+        ),
+        (
+            '"p-1",',
+            '"p-1.5",',
+        ),
+        (
+            "relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+            "relative flex w-full cursor-default items-center gap-2 rounded-md py-2 pr-9 pl-3 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[state=checked]:bg-primary/10 data-[state=checked]:font-medium data-[state=checked]:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground data-[state=checked]:[&_[data-slot=select-item-indicator]_svg]:text-primary *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         ),
     ),
     Path("src/components/ui/native-select.tsx"): (
         (
             "h-9 w-full min-w-0 appearance-none rounded-md border border-input bg-transparent px-3 py-2 pr-9 text-sm shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-8 data-[size=sm]:py-1 dark:bg-input/30 dark:hover:bg-input/50",
-            "h-9 w-full min-w-0 appearance-none rounded-md border border-input bg-transparent px-3 py-2 pr-9 text-sm shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-8 data-[size=sm]:py-1",
+            "h-10 w-full min-w-0 appearance-none rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm font-normal text-foreground shadow-xs transition-[color,box-shadow,background-color,border-color] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground hover:border-foreground/20 hover:bg-muted/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 data-[size=sm]:h-8 data-[size=sm]:py-1",
         ),
         (
             "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
             "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
+        ),
+        (
+            "right-3.5 size-4 -translate-y-1/2 text-muted-foreground opacity-50",
+            "right-3 size-4 -translate-y-1/2 text-muted-foreground opacity-70",
         ),
     ),
     Path("src/components/ui/checkbox.tsx"): (

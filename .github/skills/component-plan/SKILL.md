@@ -80,8 +80,19 @@ use-example-feature/
 
 - Pagina: compoe layout e chama hooks.
 - Feature component: exibe regra visual de dominio.
-- Service: conversa com API.
+- `config.ts` da feature: `apiVersion` e `baseUrl` (com fallback em `appEnv`).
+- Service: conversa com API via cliente da feature (`createApiClient`), nunca cliente global compartilhado.
+- Hooks da feature: em `src/features/<feature>/hooks/` (dominio); `src/hooks/` so para transversal.
 - Schema: valida payload e formulario.
+
+### Cliente API por feature
+
+```txt
+src/lib/api/create-api-client.ts   # factory compartilhada
+src/features/pedidos/config.ts     # apiVersion, baseUrl
+src/features/pedidos/services/api-client.ts
+src/features/pedidos/hooks/        # useQuery, usePedidos, etc.
+```
 
 ## Anti-patterns
 

@@ -16,6 +16,33 @@ type FileUploadDropzoneProps = Omit<
   onFilesChange?: (files: File[]) => void
 }
 
+function fileKey(file: File) {
+  return `${file.name}-${file.size}`
+}
+
+function partitionIncomingFiles(incoming: File[], existing: File[]) {
+  const existingKeys = new Set(existing.map(fileKey))
+  const seenIncoming = new Set<string>()
+  const accepted: File[] = []
+  const duplicateNames: string[] = []
+
+  for (const file of incoming) {
+    const key = fileKey(file)
+
+    if (existingKeys.has(key) || seenIncoming.has(key)) {
+      if (!duplicateNames.includes(file.name)) {
+        duplicateNames.push(file.name)
+      }
+      continue
+    }
+
+    seenIncoming.add(key)
+    accepted.push(file)
+  }
+
+  return { accepted, duplicateNames }
+}
+
 function formatFileSize(size: number) {
   if (size < 1024) {
     return `${size} B`
@@ -44,8 +71,10 @@ function FileUploadDropzone({
   const generatedId = React.useId()
   const inputId = id ?? generatedId
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const errorId = `${inputId}-error`
   const [isDragging, setIsDragging] = React.useState(false)
   const [internalFiles, setInternalFiles] = React.useState<File[]>([])
+  const [validationError, setValidationError] = React.useState<string | null>(null)
   const selectedFiles = files ?? internalFiles
 
   const updateFiles = React.useCallback(
@@ -66,10 +95,61 @@ function FileUploadDropzone({
       return
     }
 
-    updateFiles(Array.from(fileList))
+    const incoming = Array.from(fileList)
+    const messages: string[] = []
+
+    if (!multiple) {
+      const { accepted, duplicateNames } = partitionIncomingFiles(
+        incoming.slice(0, 1),
+        selectedFiles,
+      )
+
+      if (duplicateNames.length > 0) {
+        messages.push(`O arquivo "${duplicateNames[0]}" já foi adicionado.`)
+      }
+
+      if (accepted.length > 0) {
+        updateFiles(accepted)
+      }
+
+      setValidationError(messages.length > 0 ? messages.join(" ") : null)
+
+      if (inputRef.current) {
+        inputRef.current.value = ""
+      }
+      return
+    }
+
+    const { accepted, duplicateNames } = partitionIncomingFiles(incoming, selectedFiles)
+
+    if (duplicateNames.length > 0) {
+      messages.push(
+        duplicateNames.length === 1
+          ? `O arquivo "${duplicateNames[0]}" já foi adicionado.`
+          : `Estes arquivos já foram adicionados: ${duplicateNames.join(", ")}.`,
+      )
+    }
+
+    const availableSlots = Math.max(maxFiles - selectedFiles.length, 0)
+    const filesToAdd = accepted.slice(0, availableSlots)
+
+    if (accepted.length > availableSlots) {
+      messages.push(`Limite de ${maxFiles} arquivos.`)
+    }
+
+    if (filesToAdd.length > 0) {
+      updateFiles([...selectedFiles, ...filesToAdd])
+    }
+
+    setValidationError(messages.length > 0 ? messages.join(" ") : null)
+
+    if (inputRef.current) {
+      inputRef.current.value = ""
+    }
   }
 
   function removeFile(fileName: string) {
+    setValidationError(null)
     updateFiles(selectedFiles.filter((file) => file.name !== fileName))
   }
 
@@ -88,6 +168,8 @@ function FileUploadDropzone({
       />
       <div
         aria-disabled={disabled}
+        aria-describedby={validationError ? errorId : undefined}
+        aria-invalid={validationError ? true : undefined}
         onDragEnter={(event) => {
           event.preventDefault()
           if (!disabled) {
@@ -112,6 +194,7 @@ function FileUploadDropzone({
         className={cn(
           "flex min-h-48 flex-col items-center justify-center gap-3 rounded-lg border border-dashed bg-muted p-6 text-center transition-colors",
           isDragging && "border-primary bg-primary/5",
+          validationError && "border-destructive ring-destructive/20",
           disabled && "pointer-events-none opacity-50",
         )}
       >
@@ -135,11 +218,17 @@ function FileUploadDropzone({
         </Button>
       </div>
 
+      {validationError ? (
+        <p id={errorId} role="alert" className="text-sm text-destructive">
+          {validationError}
+        </p>
+      ) : null}
+
       {selectedFiles.length > 0 ? (
         <div className="flex flex-col gap-2" aria-live="polite">
           {selectedFiles.map((file) => (
             <div
-              key={`${file.name}-${file.size}`}
+              key={fileKey(file)}
               className="flex items-center gap-3 rounded-md border bg-background px-3 py-2"
             >
               <FileIcon aria-hidden="true" />

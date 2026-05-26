@@ -16,6 +16,13 @@ export default defineConfig(({ mode }) => {
       host: env.VITE_DEV_HOST || "0.0.0.0",
       port: Number(env.VITE_DEV_PORT || 5173),
       strictPort: false,
+      proxy: {
+        "/api": {
+          changeOrigin: true,
+          target: env.VITE_API_PROXY_TARGET || "http://localhost:8000",
+          rewrite: (requestPath) => requestPath.replace(/^\/api/, ""),
+        },
+      },
     },
     preview: {
       host: env.VITE_DEV_HOST || "0.0.0.0",

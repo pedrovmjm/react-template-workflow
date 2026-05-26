@@ -53,6 +53,9 @@ Definir como a feature consome API, cacheia dados, invalida mutations, sincroniz
 - `localStorage`/`sessionStorage` podem guardar preferencias nao sensiveis, como tema, densidade, ultima aba ou filtros de conveniencia, quando houver justificativa.
 - Tokens, refresh tokens, session IDs, segredos e PII nao devem ser persistidos em `localStorage`/`sessionStorage`; encaminhar para `security.agent.md`.
 - Services nao importam React e nao conhecem componentes.
+- Cada feature usa cliente HTTP proprio via `createApiClient` (`src/lib/api/create-api-client.ts`), com versao em header `X-API-Version`; nunca compartilhar um unico cliente entre features com versoes ou bases diferentes.
+- Versao e base URL default vêm de `appEnv` (`VITE_API_VERSION`, `VITE_API_BASE_URL`); overrides por feature via `config.ts` e env `VITE_<FEATURE>_API_*`.
+- Hooks de leitura/estado da feature ficam em `src/features/<feature>/hooks/`; preferir TanStack Query quando houver cache compartilhado — o `useQuery`/`useMutation` de exemplo sao alternativas leves com retry limitado, `failed`/`serverUnavailable` explicitos e `queryFn` em `useRef` para evitar loop de requisicoes.
 - Query keys devem ser estaveis, previsiveis e proximas da feature.
 - Mutations definem sucesso, erro, pending e invalidacao ou atualizacao de cache.
 - Erros de API devem virar mensagem segura para o usuario; resposta bruta nao deve vazar.
@@ -80,6 +83,8 @@ Definir como a feature consome API, cacheia dados, invalida mutations, sincroniz
 ## Checklist embutido
 
 - [ ] API nao e chamada direto no JSX.
+- [ ] Cliente HTTP e por feature (`createApiClient`), sem versao compartilhada entre dominios.
+- [ ] Hooks de dados da feature estao em `src/features/<feature>/hooks/`.
 - [ ] Query keys sao consistentes.
 - [ ] Mutations tratam sucesso e falha.
 - [ ] Server state nao foi duplicado em Zustand.

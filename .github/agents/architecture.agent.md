@@ -52,6 +52,10 @@ Definir onde arquivos, rotas, URLs e responsabilidades vivem em projetos React +
 - Layouts globais, shell, sidebar e navbar ficam em `components/layout` ou no padrao ja existente.
 - Componentes compartilhados so entram em `components/shared` quando houver reuso real e contrato estavel.
 - Services de API nao dependem de React.
+- `src/lib/api` expoe apenas factory compartilhada (`createApiClient`, tipos e helpers); nao existe cliente HTTP global compartilhado entre features.
+- Cada feature com consumo de API cria seu proprio cliente em `src/features/<feature>/services/api-client.ts`, com `apiVersion` e `baseUrl` definidos em `src/features/<feature>/config.ts` (ou env `VITE_<FEATURE>_API_VERSION` / `VITE_<FEATURE>_API_BASE_URL`).
+- Hooks de dominio (leitura, formulario, cache local da feature) vivem em `src/features/<feature>/hooks/`; `src/hooks/` fica reservado a hooks transversais da aplicacao (ex.: `use-mobile`).
+- Nao usar `src/services/` na raiz; services de API pertencem a feature.
 - Schemas Zod ficam perto da feature, salvo quando forem contratos compartilhados.
 - Hooks simples podem ser arquivo unico; hooks complexos usam pasta propria com `index.ts`, tipos e testes quando fizer sentido.
 - Vite: variaveis publicas usam `VITE_`; segredos nao ficam no cliente.
@@ -65,9 +69,11 @@ Definir onde arquivos, rotas, URLs e responsabilidades vivem em projetos React +
 src/
   features/
     exemplo/
+      config.ts
       components/
       hooks/
       services/
+        api-client.ts
       schemas/
       types/
       index.ts
