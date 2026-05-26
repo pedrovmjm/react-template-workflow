@@ -57,6 +57,8 @@ Revisar componentes, hooks, estado, efeitos, queries, forms, tipos, exports e pe
 - [ ] Componentes tem responsabilidade unica.
 - [ ] Logica complexa esta em hooks.
 - [ ] Nao ha chamada de API em JSX.
+- [ ] Cada feature usa cliente HTTP proprio (`createApiClient` + `config.ts`); versoes de API nao sao compartilhadas entre dominios.
+- [ ] Hooks de dominio estao em `src/features/<feature>/hooks/`, nao em `src/hooks/` global.
 - [ ] Efeitos tem dependencias corretas.
 - [ ] Forms tem validacao.
 - [ ] Tipos evitam `any`.
@@ -76,6 +78,8 @@ Revisar componentes, hooks, estado, efeitos, queries, forms, tipos, exports e pe
 
 ## Anti-patterns
 
+- Cliente HTTP global compartilhado entre features com `X-API-Version` diferente.
+- Hooks de dominio em `src/hooks/` ou services na raiz `src/services/`.
 - Duplicar server state em store global.
 - `useEffect` para calcular valor derivado simples.
 - Componentes com responsabilidades de API, validacao e layout ao mesmo tempo.
